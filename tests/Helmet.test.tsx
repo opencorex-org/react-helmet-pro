@@ -4,11 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Helmet } from '../src/components/Helmet';
 import { HelmetContext } from '../src/context/HelmetContext';
-import React from 'react';
 import { render } from '@testing-library/react';
-import { updateTag } from '../src/core/HeadManager';
+import { updateTag } from '../src/core/HelmetManager';
 
-vi.mock('../src/core/HeadManager', () => ({
+vi.mock('../src/core/HelmetManager', () => ({
   updateTag: vi.fn((type, props) => {
     const tag = document.createElement(type);
     Object.keys(props).forEach((key) => {

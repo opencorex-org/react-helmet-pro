@@ -1,18 +1,27 @@
 "use client";
 
-import { updateTag } from "../core/HeadManager";
+import { updateTag } from "../core/HelmetManager";
 import { useEffect } from "react";
 
 export const SecurityMeta = () => {
+  const securityMetaTags = [
+    {
+      name: "referrer",
+      content: "no-referrer",
+    },
+  ];
+
   useEffect(() => {
-    updateTag("meta", {
-      "http-equiv": "Content-Security-Policy",
-      content: "default-src 'self'",
+    const createdTags: HTMLElement[] = [];
+
+    securityMetaTags.forEach((tagProps) => {
+      const tag = updateTag("meta", tagProps);
+      if (tag) createdTags.push(tag);
     });
-    updateTag("meta", {
-      "http-equiv": "X-Content-Type-Options",
-      content: "nosniff",
-    });
+
+    return () => {
+      createdTags.forEach((tag) => tag.remove());
+    };
   }, []);
 
   return null;

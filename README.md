@@ -1,4 +1,4 @@
-# 🧠 React Helmet Pro
+# React Helmet Pro
 
 **React Helmet Pro** is an advanced, modular, and SSR compatible head manager for React applications. It provides a clean and powerful API for dynamically managing `<title>`, `<meta>`, `<link>`, `<script>`, structured data, favicons, analytics, and security headers designed for real world production use.
 
@@ -6,21 +6,21 @@
 
 ---
 
-## 🚀 Features
+## Features
 
-- ⚛️ Dynamic `<title>`, `<meta>`, `<link>`, `<script>` injection
-- 📦 JSON-LD Structured Data support
-- 📊 Google Analytics integration
-- 🌐 Favicons & SEO helpers
-- 🔐 Security meta tags (CSP, nosniff, etc.)
-- 🌍 SSR-friendly with `collectHelmetTags()`
-- 🧱 Middleware support for reusable helmet logic
-- 🔁 Context API for global helmet state
-- 🔌 TypeScript support out of the box
+-  Dynamic `<title>`, `<meta>`, `<link>`, `<script>` injection
+- JSON-LD Structured Data support
+- Google Analytics integration
+- Favicons & SEO helpers
+- Security meta tags (CSP, nosniff, etc.)
+- SSR-friendly with `collectHelmetTags()`
+- Middleware support for reusable helmet logic
+- Context API for global helmet state
+- TypeScript support out of the box
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 # or with npm
@@ -34,7 +34,7 @@ yarn add react-helmet-pro
 
 ---
 
-## 🧠 Basic Usage
+# Basic Usage
 
 ### Wrap Your App
 
@@ -89,7 +89,7 @@ import { Analytics } from 'react-helmet-pro';
 
 ---
 
-## 🧩 Middleware Example
+## Middleware Example
 
 You can define reusable middleware functions to extend or modify head data.
 
@@ -115,7 +115,7 @@ useHelmetMiddleware(withSiteSuffix);
 ---
 
 
-## 🧠 Next.js Usage
+## Next.js Usage
 
 `react-helmet-pro` works seamlessly with **Next.js**, including full support for **Server Side Rendering (SSR)** and **App Router**. Follow these steps to integrate it:
 
@@ -229,14 +229,14 @@ Use `HelmetWrapper` at the top of your page/component to apply middleware.
 
 ---
 
-### 🛑 Common Gotchas in Next.js
+### Common Gotchas in Next.js
 
 - **Hydration Mismatch Warning**: Avoid using dynamic data like `Date.now()` or `Math.random()` in head tags without guards (`typeof window !== 'undefined'`) or snapshotting.
 - Always mark `Helmet` and `StructuredData` usage in `use client` components.
 
 ---
 
-## 📄 Components API
+## Components API
 
 ### `<Helmet />`
 
@@ -278,7 +278,7 @@ Injects security-related meta tags like CSP, XSS protection, nosniff headers, et
 
 ---
 
-## 🧪 SSR Support
+## SSR Support
 
 ### Server-side Helmet Tag Extraction
 
@@ -291,7 +291,7 @@ const headTags = collectHelmetTags(/* JSX head elements */);
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Test with Jest + React Testing Library.
 
@@ -308,7 +308,7 @@ expect(document.title).toBe("Test Page");
 
 ---
 
-## 🧑‍💻 Contributing
+## Contributing
 
 We welcome all contributions!  
 To get started:
@@ -324,19 +324,19 @@ Please open an issue or pull request if you find bugs or have feature requests.
 
 ---
 
-## 📬 Contact
+## Contact
 
-- 📧 Email: [lahiruudayakumara.info@gmail.com](mailto:lahiruudayakumara.info@gmail.com)
-- 🌐 Website: [https://lahiruudayakumara.me](https://lahiruudayakumara.me)
+- Email: [lahiruudayakumara.info@gmail.com](mailto:udayakumara.wdl@gmail.com)
+- Website: [https://lahiruudayakumara.me](https://lahiruudayakumara.com)
 
 ---
 
-## 📄 License
+## License
 
 MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
-## 💡 Credits
+## Credits
 
 Inspired by [React Helmet](https://github.com/nfl/react-helmet), but rebuilt for modern apps with middleware, SSR, and context extensibility.

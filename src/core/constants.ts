@@ -1,1 +1,1 @@
-export const HELMET_TAGS = ['title', 'meta', 'link', 'script', 'style'];
+export const HELMET_TAGS = ['title', 'meta', 'link', 'script', 'htmlAttributes'];
