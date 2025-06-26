@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom';
+
 import { describe, expect, it } from 'vitest';
 
 import { StructuredData } from '../src/components/StructuredData';
