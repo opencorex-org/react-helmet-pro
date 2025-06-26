@@ -6,19 +6,7 @@ import { useEffect } from "react";
 export const SecurityMeta = () => {
   const securityMetaTags = [
     {
-      "http-equiv": "Content-Security-Policy",
-      content: "default-src 'self'",
-    },
-    {
-      "http-equiv": "X-Content-Type-Options",
-      content: "nosniff",
-    },
-    {
-      "http-equiv": "X-Frame-Options",
-      content: "DENY",
-    },
-    {
-      "http-equiv": "Referrer-Policy",
+      name: "referrer",
       content: "no-referrer",
     },
   ];
