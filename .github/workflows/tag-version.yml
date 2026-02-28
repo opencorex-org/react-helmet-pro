@@ -50,7 +50,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git tag $VERSION
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/opencorex-org/sheetra.git
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/opencorex-org/react-helmet-pro.git
           git push origin $VERSION
 
       - name: Create GitHub Release
