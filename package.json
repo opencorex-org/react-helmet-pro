@@ -1,6 +1,6 @@
 {
   "name": "react-helmet-pro",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A modern head manager for React, inspired by react-helmet with additional features and async support.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
