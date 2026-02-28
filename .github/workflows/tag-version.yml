@@ -1,0 +1,65 @@
+name: Tag Release from package.json
+
+on:
+  push:
+    branches:
+      - main
+      
+permissions:
+  contents: write
+  
+jobs:
+  tag:
+    if: github.repository_owner == 'opencorex-org'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get version from package.json
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=v$VERSION" >> $GITHUB_ENV
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists."
+            echo "EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Tag $VERSION does not exist."
+            echo "EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Git user
+        if: env.EXISTS == 'false'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push tag
+        if: env.EXISTS == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git tag $VERSION
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/opencorex-org/sheetra.git
+          git push origin $VERSION
+
+      - name: Create GitHub Release
+        if: env.EXISTS == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: "Release ${{ env.VERSION }}"
+          body: |
+            Automated release for version ${{ env.VERSION }}.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
