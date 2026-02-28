@@ -1,4 +1,12 @@
-# React Helmet Pro
+## React Helmet Pro
+
+[![npm version](https://img.shields.io/npm/v/react-helmet-pro.svg)](https://www.npmjs.com/package/react-helmet-pro)
+[![License](https://img.shields.io/github/license/opencorex-org/react-helmet-pro)](LICENSE)
+[![Build Status](https://github.com/lahiruudayakumara/react-helmet-pro/actions/workflows/build.yml/badge.svg)](https://github.com/lahiruudayakumara/react-helmet-pro/actions)
+[![npm downloads](https://img.shields.io/npm/dm/react-helmet-pro.svg)](https://www.npmjs.com/package/react-helmet-pro)
+[![GitHub stars](https://img.shields.io/github/stars/opencorex-org/react-helmet-pro?style=social)](https://github.com/opencorex-org/react-helmet-pro)
+[![GitHub issues](https://img.shields.io/github/issues/opencorex-org/react-helmet-pro)](https://github.com/opencorex-org/react-helmet-pro/issues)
+[![Code Coverage](https://img.shields.io/codecov/c/github/lahiruudayakumara/react-helmet-pro)](https://codecov.io/gh/opencorex-org/react-helmet-pro)
 
 **React Helmet Pro** is an advanced, modular, and SSR compatible head manager for React applications. It provides a clean and powerful API for dynamically managing `<title>`, `<meta>`, `<link>`, `<script>`, structured data, favicons, analytics, and security headers designed for real world production use.
 
@@ -8,7 +16,7 @@
 
 ## Features
 
--  Dynamic `<title>`, `<meta>`, `<link>`, `<script>` injection
+- Dynamic `<title>`, `<meta>`, `<link>`, `<script>` injection
 - JSON-LD Structured Data support
 - Google Analytics integration
 - Favicons & SEO helpers
@@ -29,7 +37,6 @@ npm install react-helmet-pro
 pnpm add react-helmet-pro
 # or with yarn
 yarn add react-helmet-pro
-
 ```
 
 ---
@@ -310,8 +317,7 @@ expect(document.title).toBe("Test Page");
 
 ## Contributing
 
-We welcome all contributions!  
-To get started:
+We welcome all contributions! To get started:
 
 ```bash
 git clone https://github.com/lahiruudayakumara/react-helmet-pro.git
@@ -328,12 +334,6 @@ Please open an issue or pull request if you find bugs or have feature requests.
 
 - Email: [lahiruudayakumara.info@gmail.com](mailto:udayakumara.wdl@gmail.com)
 - Website: [https://lahiruudayakumara.me](https://lahiruudayakumara.com)
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
