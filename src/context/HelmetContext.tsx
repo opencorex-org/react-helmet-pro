@@ -2,19 +2,6 @@
 
 import { createContext } from "react";
 
-export interface HelmetContextType {
-  setHead: (data: {
-    title?: string;
-    meta?: { name?: string; property?: string; content: string }[];
-    link?: { rel: string; href: string }[];
-    script?: { src: string; async?: boolean; defer?: boolean }[];
-    htmlAttributes?: { [key: string]: string };
-  }) => void;
-  title?: string;
-  meta?: { name?: string; property?: string; content: string }[];
-  link?: { rel: string; href: string }[];
-  script?: { src: string; async?: boolean; defer?: boolean }[];
-  htmlAttributes?: { [key: string]: string };
-}
+import type { HelmetContextValue } from "../types";
 
-export const HelmetContext = createContext<HelmetContextType | null>(null);
+export const HelmetContext = createContext<HelmetContextValue | null>(null);

@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "lib": ["DOM", "ESNext"],
     "paths": {
       "react-helmet-pro": ["../src"]
     },
     "jsx": "react-jsx",
     "module": "ESNext",
     "target": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["./"]
+  "include": ["./App.tsx", "./index.tsx"],
+  "exclude": ["./node_modules", "./vite.config.examples.ts"]
 }

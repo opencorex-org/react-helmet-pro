@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect } from 'react';
+import { DependencyList, useEffect } from "react";
 
-export const useHelmetMiddleware = (middleware: (head: any) => any, deps: any[]) => {
+import { useHelmet } from "./useHelmet";
+
+export const useHelmetMiddleware = (
+  middleware: (head: ReturnType<typeof useHelmet>) => Record<string, unknown> | void,
+  deps: DependencyList = [],
+) => {
+  const helmet = useHelmet();
+
   useEffect(() => {
-    middleware?.({});
-  }, deps);
+    const nextState = middleware?.(helmet);
+
+    if (nextState && typeof nextState === "object") {
+      helmet.setHead(nextState);
+    }
+  }, [helmet, middleware, ...deps]);
 };
