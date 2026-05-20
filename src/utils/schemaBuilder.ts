@@ -8,6 +8,46 @@ export interface ArticleSchemaPublisher {
   name: string;
 }
 
+export interface OrganizationAddress {
+  addressCountry?: string;
+  addressLocality?: string;
+  addressRegion?: string;
+  postalCode?: string;
+  streetAddress?: string;
+}
+
+export interface OrganizationContactPoint {
+  areaServed?: string | string[];
+  availableLanguage?: string | string[];
+  contactOption?: string | string[];
+  contactType: string;
+  email?: string;
+  telephone?: string;
+}
+
+export interface OrganizationSchemaInput {
+  address?: OrganizationAddress;
+  alternateName?: string | string[];
+  contactPoints?: OrganizationContactPoint[];
+  description?: string;
+  email?: string;
+  foundingDate?: string;
+  legalName?: string;
+  logo?: string;
+  name: string;
+  sameAs?: string[];
+  telephone?: string;
+  url?: string;
+}
+
+export interface WebSiteSchemaInput {
+  alternateName?: string | string[];
+  description?: string;
+  inLanguage?: string | string[];
+  name: string;
+  url: string;
+}
+
 export type ArticleSchemaType = "Article" | "BlogPosting" | "NewsArticle";
 
 export interface ArticleSchemaInput {
@@ -59,6 +99,82 @@ export const buildSchema = <T extends Record<string, unknown>>(type: string, dat
   "@type": type,
   ...data,
 });
+
+export const buildOrganizationSchema = ({
+  address,
+  alternateName,
+  contactPoints,
+  description,
+  email,
+  foundingDate,
+  legalName,
+  logo,
+  name,
+  sameAs,
+  telephone,
+  url,
+}: OrganizationSchemaInput) =>
+  buildSchema(
+    "Organization",
+    compactObject({
+      address: address
+        ? compactObject({
+            "@type": "PostalAddress",
+            addressCountry: address.addressCountry,
+            addressLocality: address.addressLocality,
+            addressRegion: address.addressRegion,
+            postalCode: address.postalCode,
+            streetAddress: address.streetAddress,
+          })
+        : undefined,
+      alternateName,
+      contactPoint: contactPoints?.length
+        ? contactPoints.map((entry) =>
+            compactObject({
+              "@type": "ContactPoint",
+              areaServed: entry.areaServed,
+              availableLanguage: entry.availableLanguage,
+              contactOption: entry.contactOption,
+              contactType: entry.contactType,
+              email: entry.email,
+              telephone: entry.telephone,
+            }),
+          )
+        : undefined,
+      description,
+      email,
+      foundingDate,
+      legalName,
+      logo: logo
+        ? {
+            "@type": "ImageObject",
+            url: logo,
+          }
+        : undefined,
+      name,
+      sameAs: sameAs?.length ? sameAs : undefined,
+      telephone,
+      url,
+    }),
+  );
+
+export const buildWebSiteSchema = ({
+  alternateName,
+  description,
+  inLanguage,
+  name,
+  url,
+}: WebSiteSchemaInput) =>
+  buildSchema(
+    "WebSite",
+    compactObject({
+      alternateName,
+      description,
+      inLanguage,
+      name,
+      url,
+    }),
+  );
 
 export const buildArticleSchema = ({
   authors,
