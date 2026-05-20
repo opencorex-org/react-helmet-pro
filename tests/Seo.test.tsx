@@ -23,6 +23,7 @@ describe("Seo", () => {
           keywords={["react", "seo", "helmet"]}
           locale="en-US"
           openGraph={{
+            alternateLocale: ["de-DE"],
             images: [
               {
                 alt: "Open Graph preview",
@@ -70,6 +71,10 @@ describe("Seo", () => {
     expect(document.querySelector('meta[property="og:site_name"]')).toHaveAttribute(
       "content",
       "React Helmet Pro",
+    );
+    expect(document.querySelector('meta[property="og:locale:alternate"]')).toHaveAttribute(
+      "content",
+      "de-DE",
     );
     expect(document.querySelector('meta[property="og:image:alt"]')).toHaveAttribute(
       "content",

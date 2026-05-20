@@ -20,6 +20,7 @@
 - `react-helmet-async`-style `HelmetProvider` request context
 - Dynamic `<title>`, `<base>`, `<meta>`, `<link>`, `<script>`, `<style>`, `<noscript>` injection
 - High-level `<Seo />` component for common SEO tags
+- `<SiteSeo />` for homepage metadata, site names, and organization identity
 - `<ArticleSeo />` plus breadcrumb and FAQ rich-result helpers
 - `htmlAttributes`, `bodyAttributes`, and `titleAttributes`
 - `titleTemplate`, `defaultTitle`, `defer`, and `onChangeClientState`
@@ -139,6 +140,31 @@ import { Seo } from 'react-helmet-pro';
   twitter={{
     creator: '@example',
     images: ['https://example.com/og/about.png'],
+  }}
+/>
+```
+
+### Add Homepage SEO With Site Identity Markup
+
+```tsx
+import { SiteSeo } from 'react-helmet-pro';
+
+<SiteSeo
+  title="React Helmet Pro"
+  description="Modern React head management with built-in SEO helpers."
+  canonical="https://reacthelmetpro.dev"
+  siteName="React Helmet Pro"
+  alternateSiteName={['Helmet Pro', 'RHP']}
+  openGraph={{
+    alternateLocale: ['de_DE'],
+    images: [{ url: 'https://reacthelmetpro.dev/og/home.png', alt: 'Homepage preview' }],
+  }}
+  organization={{
+    logo: 'https://reacthelmetpro.dev/logo.png',
+    sameAs: [
+      'https://github.com/opencorex-org/react-helmet-pro',
+      'https://www.npmjs.com/package/react-helmet-pro',
+    ],
   }}
 />
 ```
@@ -594,6 +620,27 @@ High-level SEO helper built on top of `Helmet`.
 
 ---
 
+### `<SiteSeo />`
+
+Homepage-focused helper built on top of `Seo`. It keeps page metadata aligned with `WebSite` and `Organization` JSON-LD so site names, brand identity, and social metadata stay in sync.
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `siteName` | `string` | Preferred site name and Open Graph site name |
+| `alternateSiteName` | `string \| string[]` | Alternate site names for `WebSite` JSON-LD |
+| `organization` | organization input | Optional `Organization` JSON-LD details such as `logo`, `sameAs`, `contactPoints`, and `address` |
+| `webSite` | website input | Optional overrides for `WebSite` JSON-LD fields |
+| `jsonLd` | `object \| object[]` | Additional JSON-LD payloads to append |
+| other `Seo` props | inherited | Includes `canonical`, `description`, `keywords`, `locale`, `openGraph`, `twitter`, and more |
+
+`SiteSeo` is especially useful on a homepage or marketing landing page where you want:
+
+- standard title, description, canonical, Open Graph, and Twitter tags
+- `WebSite` structured data for site name signals
+- `Organization` structured data for logo, same-as links, and contact details
+
+---
+
 ### `<ArticleSeo />`
 
 Purpose-built helper for editorial pages. It renders the standard `Seo` tags, article Open Graph tags, and an Article or BlogPosting JSON-LD payload together.
@@ -656,11 +703,31 @@ Server-safe JSON-LD renderer for frameworks like Next.js App Router.
 
 ---
 
+### `<OrganizationJsonLd />`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| organization fields | structured data fields | Renders `Organization` JSON-LD through `StructuredData` |
+| `id` | `string` | Optional script element id |
+
+---
+
+### `<WebSiteJsonLd />`
+
+| Prop | Type | Description |
+|------|------|-------------|
+| website fields | structured data fields | Renders `WebSite` JSON-LD through `StructuredData` |
+| `id` | `string` | Optional script element id |
+
+---
+
 ## Structured Data Builders
 
 If you want to build the schema yourself and render it through `StructuredData` or `JsonLdScript`, the package also exports:
 
 - `buildSchema()`
+- `buildWebSiteSchema()`
+- `buildOrganizationSchema()`
 - `buildArticleSchema()`
 - `buildBreadcrumbSchema()`
 - `buildFaqSchema()`
@@ -785,6 +852,14 @@ Test with Vitest + React Testing Library.
 ```bash
 pnpm test
 ```
+
+---
+
+## Project Health
+
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Security policy: [SECURITY.md](./SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 
 Example test:
 
