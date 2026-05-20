@@ -24,6 +24,7 @@ export interface SeoImage {
 }
 
 export interface SeoOpenGraph {
+  alternateLocale?: string[];
   authors?: string[];
   description?: string;
   determiner?: string;
@@ -259,6 +260,9 @@ export const Seo = ({
   appendPropertyMeta(meta, "og:site_name", resolvedOpenGraph?.siteName);
   appendPropertyMeta(meta, "og:locale", resolvedOpenGraph?.locale);
   appendPropertyMeta(meta, "og:determiner", resolvedOpenGraph?.determiner);
+  resolvedOpenGraph?.alternateLocale?.forEach((entry) =>
+    appendPropertyMeta(meta, "og:locale:alternate", entry),
+  );
 
   resolvedOpenGraph?.images?.forEach((image) => {
     appendPropertyMeta(meta, "og:image", image.url);

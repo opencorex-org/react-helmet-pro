@@ -8,6 +8,7 @@ import {
   JsonLdScript,
   Seo,
   SecurityMeta,
+  SiteSeo,
   StructuredData,
   buildNextManifest,
   buildNextMetadata,
@@ -191,7 +192,9 @@ const ExamplePlayground: React.FC = () => {
         answer:
           pageKey === "docs"
             ? "Use ArticleSeo for editorial pages, then add BreadcrumbJsonLd and FAQJsonLd for rich-result schema."
-            : "Use the high-level Seo component for common tags, then add focused schema helpers where the page deserves them.",
+            : pageKey === "home"
+              ? "Use SiteSeo on the homepage so page metadata, site-name markup, and organization markup stay aligned."
+              : "Use the high-level Seo component for common tags, then add focused schema helpers where the page deserves them.",
         question: "How should this page improve SEO?",
       },
       {
@@ -347,7 +350,47 @@ const ExamplePlayground: React.FC = () => {
     <>
       <Favicon href="assets/logo.png" />
       <SecurityMeta />
-      {pageKey === "docs" ? (
+      {pageKey === "home" ? (
+        <SiteSeo
+          alternateSiteName={["Helmet Pro", "RHP"]}
+          alternates={[
+            { href: `${page.canonical}?lang=en`, hrefLang: "en" },
+            { href: `${page.canonical}?lang=de`, hrefLang: "de" },
+          ]}
+          canonical={page.canonical}
+          description={page.description}
+          keywords={page.keywords}
+          locale={locale}
+          openGraph={{
+            alternateLocale: locale === "en" ? ["de_DE"] : ["en_US"],
+            images: [{ alt: `${page.title} preview`, url: page.image }],
+            title: `${page.title} Example`,
+            type: "website",
+            url: page.canonical,
+          }}
+          organization={{
+            alternateName: ["Helmet Pro", "RHP"],
+            contactPoints: [
+              {
+                availableLanguage: ["en", "de"],
+                contactType: "customer support",
+                email: "support@reacthelmetpro.dev",
+              },
+            ],
+            logo: "https://reacthelmetpro.dev/logo.png",
+            sameAs: [
+              "https://github.com/opencorex-org/react-helmet-pro",
+              "https://www.npmjs.com/package/react-helmet-pro",
+            ],
+          }}
+          siteName="React Helmet Pro"
+          title={`${page.title} Example`}
+          twitter={{
+            creator: "@reacthelmetpro",
+            images: [page.image],
+          }}
+        />
+      ) : pageKey === "docs" ? (
         <ArticleSeo
           alternates={[
             { href: `${page.canonical}?lang=en`, hrefLang: "en" },
@@ -662,9 +705,9 @@ const ExamplePlayground: React.FC = () => {
             <article style={cardStyle}>
               <h2 style={{ fontSize: 24, marginTop: 0 }}>JSON-LD helper preview</h2>
               <p style={{ color: "#c6d0ea", lineHeight: 1.7 }}>
-                `StructuredData`, `BreadcrumbJsonLd`, and `FAQJsonLd` cover client-managed rich
-                results, while `JsonLdScript` gives you a server-safe component for frameworks
-                like Next.js.
+                `SiteSeo`, `StructuredData`, `BreadcrumbJsonLd`, and `FAQJsonLd` cover homepage
+                identity plus client-managed rich results, while `JsonLdScript` gives you a
+                server-safe component for frameworks like Next.js.
               </p>
               <pre style={{ ...preStyle, marginBottom: 16 }}>{prettyJson(clientStructuredData)}</pre>
               <pre style={preStyle}>{safeJsonLdStringify(serverStructuredData)}</pre>
