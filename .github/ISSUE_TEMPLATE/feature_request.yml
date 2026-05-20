@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an improvement to react-helmet-pro
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: Share the problem you are trying to solve, not only the solution you have in mind.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and where does the current package fall short?
+      placeholder: I want to...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API, behavior, or workflow you would like to see.
+      placeholder: A clear and concise proposal.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or related libraries you evaluated.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add examples, references, or screenshots if they help.

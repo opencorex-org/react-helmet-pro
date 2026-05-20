@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a reproducible problem in react-helmet-pro
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to file a bug report. Please include a minimal reproduction when possible.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Tell us what you expected and what actually happened.
+      placeholder: A clear and concise description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Share a minimal repo, sandbox, or code sample that reproduces the issue.
+      placeholder: Steps to reproduce, repo URL, or code snippet.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: 2.2.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node.js, framework, bundler, browser, or SSR runtime details.
+      placeholder: Node 20, React 19, Next.js 16, Vite 6
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste any relevant output, stack traces, or screenshots.
+      render: shell
