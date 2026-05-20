@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
       
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
   
 jobs:
   tag:
@@ -15,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,13 +37,26 @@ jobs:
       - name: Check if tag exists
         id: check_tag
         run: |
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+          if git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
             echo "Tag $VERSION already exists."
             echo "EXISTS=true" >> $GITHUB_ENV
           else
             echo "Tag $VERSION does not exist."
             echo "EXISTS=false" >> $GITHUB_ENV
           fi
+
+      - name: Find previous tag
+        if: env.EXISTS == 'false'
+        run: |
+          PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+
+      - name: Generate release notes
+        if: env.EXISTS == 'false'
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node ./scripts/generate-release-notes.mjs
 
       - name: Set up Git user
         if: env.EXISTS == 'false'
@@ -46,11 +66,8 @@ jobs:
 
       - name: Create and push tag
         if: env.EXISTS == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          git tag $VERSION
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/opencorex-org/react-helmet-pro.git
+          git tag -a "$VERSION" -m "Release $VERSION"
           git push origin $VERSION
 
       - name: Create GitHub Release
@@ -59,7 +76,6 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
-          body: |
-            Automated release for version ${{ env.VERSION }}.
+          body_path: RELEASE_NOTES.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
