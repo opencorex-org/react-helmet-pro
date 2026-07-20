@@ -109,6 +109,10 @@ describe("Seo", () => {
               index: true,
               maxSnippet: -1,
             },
+            googleBotNews: {
+              index: false,
+              indexIfEmbedded: true,
+            },
             index: false,
             maxImagePreview: "large",
             noarchive: true,
@@ -136,6 +140,10 @@ describe("Seo", () => {
       "content",
       "index, follow, max-snippet:-1",
     );
+    expect(document.querySelector('meta[name="googlebot-news"]')).toHaveAttribute(
+      "content",
+      "noindex, indexifembedded",
+    );
     expect(document.querySelector('link[rel="alternate"][hreflang="de"]')).toHaveAttribute(
       "href",
       "https://example.com/de/docs",
@@ -152,6 +160,24 @@ describe("Seo", () => {
       "content",
       "custom-token",
     );
+  });
+
+  it("supports title defaults, templates, and priority SSR configuration", async () => {
+    render(
+      <HelmetProvider>
+        <Seo
+          defaultTitle="Example"
+          description="Templated page"
+          prioritizeSeoTags
+          title="Docs"
+          titleTemplate="%s | Example"
+        />
+      </HelmetProvider>,
+    );
+
+    await waitFor(() => {
+      expect(document.title).toBe("Docs | Example");
+    });
   });
 
   it("renders article metadata and JSON-LD scripts", async () => {

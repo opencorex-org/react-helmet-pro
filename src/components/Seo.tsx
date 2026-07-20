@@ -62,10 +62,11 @@ export interface SeoVerification {
   yandex?: string;
 }
 
-export interface SeoRobotsDirectives {
+export interface SeoRobotsRules {
   follow?: boolean;
-  googleBot?: Omit<SeoRobotsDirectives, "googleBot">;
   index?: boolean;
+  /** Only takes effect together with `index: false`. */
+  indexIfEmbedded?: boolean;
   maxImagePreview?: "large" | "none" | "standard";
   maxSnippet?: number;
   maxVideoPreview?: number;
@@ -77,10 +78,18 @@ export interface SeoRobotsDirectives {
   unavailableAfter?: string;
 }
 
+export interface SeoRobotsDirectives extends SeoRobotsRules {
+  /** Rules specifically for Google's text search crawler. */
+  googleBot?: SeoRobotsRules;
+  /** Rules specifically for Google News. */
+  googleBotNews?: SeoRobotsRules;
+}
+
 export interface SeoProps {
   alternates?: SeoAlternateLink[];
   author?: string;
   canonical?: string;
+  defaultTitle?: string;
   description?: string;
   extraLink?: LinkTag[];
   extraMeta?: MetaTag[];
@@ -92,8 +101,11 @@ export interface SeoProps {
   robots?: SeoRobotsDirectives;
   siteName?: string;
   title?: string;
+  titleTemplate?: string;
   twitter?: SeoTwitter;
   verification?: SeoVerification;
+  /** Places critical SEO tags in Helmet's priority SSR output. */
+  prioritizeSeoTags?: boolean;
 }
 
 const appendPropertyMeta = (list: MetaTag[], property: string, content?: string | number) => {
@@ -118,7 +130,7 @@ const appendNameMeta = (list: MetaTag[], name: string, content?: string | number
   });
 };
 
-const buildRobotsContent = (value?: SeoRobotsDirectives) => {
+const buildRobotsContent = (value?: SeoRobotsRules) => {
   if (!value) {
     return undefined;
   }
@@ -131,6 +143,10 @@ const buildRobotsContent = (value?: SeoRobotsDirectives) => {
 
   if (value.follow !== undefined) {
     parts.push(value.follow ? "follow" : "nofollow");
+  }
+
+  if (value.indexIfEmbedded) {
+    parts.push("indexifembedded");
   }
 
   if (value.noarchive) {
@@ -190,6 +206,7 @@ export const Seo = ({
   alternates,
   author,
   canonical,
+  defaultTitle,
   description,
   extraLink,
   extraMeta,
@@ -198,9 +215,11 @@ export const Seo = ({
   keywords,
   locale,
   openGraph,
+  prioritizeSeoTags,
   robots,
   siteName,
   title,
+  titleTemplate,
   twitter,
   verification,
 }: SeoProps) => {
@@ -213,9 +232,11 @@ export const Seo = ({
 
   const robotsContent = buildRobotsContent(robots);
   const googleBotContent = buildRobotsContent(robots?.googleBot);
+  const googleBotNewsContent = buildRobotsContent(robots?.googleBotNews);
 
   appendNameMeta(meta, "robots", robotsContent);
   appendNameMeta(meta, "googlebot", googleBotContent);
+  appendNameMeta(meta, "googlebot-news", googleBotNewsContent);
 
   appendNameMeta(meta, "google-site-verification", verification?.google);
   appendNameMeta(meta, "yandex-verification", verification?.yandex);
@@ -309,11 +330,14 @@ export const Seo = ({
 
   return (
     <Helmet
+      defaultTitle={defaultTitle}
       htmlAttributes={resolvedHtmlAttributes}
       link={link}
       meta={meta}
+      prioritizeSeoTags={prioritizeSeoTags}
       script={buildJsonLdScripts(jsonLd)}
       title={title}
+      titleTemplate={titleTemplate}
     />
   );
 };
