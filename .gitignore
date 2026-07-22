@@ -5,6 +5,8 @@ node_modules/
 # Build output
 dist/
 build/
+.artifacts/
+.package-tarball
 *.tsbuildinfo
 
 # Logs

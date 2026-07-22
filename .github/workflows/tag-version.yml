@@ -19,20 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '20'
 
       - name: Get version from package.json
         id: pkg
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=v$VERSION" >> $GITHUB_ENV
+          VERSION="$(node -e "const v=require('./package.json').version;if(!/^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/.test(v)){console.error('Invalid package version:',v);process.exit(1)}process.stdout.write(v)")"
+          echo "VERSION=v${VERSION}" >> "$GITHUB_ENV"
 
       - name: Check if tag exists
         id: check_tag
@@ -72,7 +72,7 @@ jobs:
 
       - name: Create GitHub Release
         if: env.EXISTS == 'false'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.4
         with:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
