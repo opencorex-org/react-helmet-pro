@@ -604,12 +604,15 @@ High-level SEO helper built on top of `Helmet`.
 | `title` | `string` | Sets the page title |
 | `description` | `string` | Standard meta description |
 | `canonical` | `string` | Canonical URL |
-| `keywords` | `string[]` | Keywords meta content |
+| `keywords` | `string[]` | Keywords meta content (Google Search ignores this tag; retained for other consumers) |
+| `defaultTitle` | `string` | Fallback title when no page title is provided |
+| `titleTemplate` | `string` | Title template such as `%s | Site Name` |
 | `author` | `string` | Author meta content |
 | `locale` | `string` | Also used as `<html lang>` when no `lang` is already set |
 | `siteName` | `string` | Fallback Open Graph site name |
 | `alternates` | `SeoAlternateLink[]` | Hreflang and alternate links |
-| `robots` | `SeoRobotsDirectives` | Builds `robots` and `googlebot` meta tags |
+| `robots` | `SeoRobotsDirectives` | Builds `robots`, `googlebot`, and `googlebot-news` meta tags, including `indexifembedded` |
+| `prioritizeSeoTags` | `boolean` | Places critical tags in Helmet's priority SSR output |
 | `openGraph` | `SeoOpenGraph` | Open Graph tags, including article metadata and image fields |
 | `twitter` | `SeoTwitter` | Twitter card tags |
 | `verification` | `SeoVerification` | Search engine/site verification tags |

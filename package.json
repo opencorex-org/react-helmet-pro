@@ -2,14 +2,20 @@
   "name": "react-helmet-pro",
   "version": "2.2.0",
   "description": "A modern head manager for React, inspired by react-helmet with additional features and async support.",
+  "homepage": "https://github.com/opencorex-org/react-helmet-pro#readme",
+  "bugs": {
+    "url": "https://github.com/opencorex-org/react-helmet-pro/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "vite --config examples/vite.config.examples.ts",
+    "typecheck": "pnpm exec tsc --noEmit && pnpm exec tsc --noEmit -p examples/tsconfig.json",
     "test": "pnpm exec vitest run --pool=forks --poolOptions.forks.singleFork=true",
     "test:watch": "vitest --pool=forks --poolOptions.forks.singleFork=true --max-old-space-size=4096",
     "lint": "eslint . --ext .ts,.tsx",
+    "release:notes": "node ./scripts/generate-release-notes.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -24,6 +30,11 @@
   ],
   "author": "LAHIRU UDAYAKUMARA",
   "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=18.18.0",
+    "pnpm": ">=10"
+  },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",
     "react-dom": "^18.2.0 || ^19.0.0"
