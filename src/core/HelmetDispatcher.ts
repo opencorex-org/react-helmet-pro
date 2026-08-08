@@ -3,7 +3,7 @@ import { syncHelmetState } from "./HelmetManager";
 import { buildServerState, createEmptyState, normalizeHelmetProps, reduceHelmetInstances } from "./helmetState";
 import { getCanUseDOM } from "./runtime";
 
-import type { AuditHelmetStateOptions, HelmetDescriptor, HelmetInstance, HelmetProps, HelmetServerContext, HelmetServerState, HelmetState } from "../types";
+import type { AuditHelmetStateOptions, HelmetDescriptor, HelmetInstance, HelmetProps, HelmetServerContext, HelmetServerState, HelmetState, HelmetTagCollection } from "../types";
 
 const MANUAL_INSTANCE_ID = "__react_helmet_pro_manual__";
 
@@ -58,6 +58,7 @@ export class HelmetDispatcher {
       context?: HelmetServerContext;
       enableDevDiagnostics?: boolean;
       manageDom?: boolean;
+      onError?: (error: Error, info: { phase: "commit" | "callback" | "listener"; state?: HelmetState }) => void;
     } = {},
   ) {
     if (this.options.context) {
@@ -126,7 +127,19 @@ export class HelmetDispatcher {
   }
 
   private notifyListeners() {
-    this.listeners.forEach((listener) => listener());
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        if (this.options.onError) {
+          this.options.onError(error, { phase: "listener", state: this.currentState });
+        }
+        if (this.options.enableDevDiagnostics) {
+          console.error(`[react-helmet-pro:listener] Error in subscriber listener:`, error);
+        }
+      }
+    });
   }
 
   private scheduleDomCommit() {
@@ -140,12 +153,38 @@ export class HelmetDispatcher {
     }
 
     const commit = () => {
-      const { addedTags, removedTags } = syncHelmetState(this.lastAppliedState, this.currentState);
-      this.lastAppliedState = this.currentState;
-      this.frameId = null;
+      let addedTags: HelmetTagCollection = { base: [], link: [], meta: [], noscript: [], script: [], style: [] };
+      let removedTags: HelmetTagCollection = { base: [], link: [], meta: [], noscript: [], script: [], style: [] };
+
+      try {
+        const syncResult = syncHelmetState(this.lastAppliedState, this.currentState);
+        addedTags = syncResult.addedTags;
+        removedTags = syncResult.removedTags;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        if (this.options.onError) {
+          this.options.onError(error, { phase: "commit", state: this.currentState });
+        }
+        if (this.options.enableDevDiagnostics) {
+          console.error(`[react-helmet-pro:commit] Error during DOM sync/commit phase:`, error);
+        }
+      } finally {
+        this.lastAppliedState = this.currentState;
+        this.frameId = null;
+      }
 
       this.callbacks.forEach((callback) => {
-        callback?.(this.currentState, addedTags, removedTags);
+        try {
+          callback?.(this.currentState, addedTags, removedTags);
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          if (this.options.onError) {
+            this.options.onError(error, { phase: "callback", state: this.currentState });
+          }
+          if (this.options.enableDevDiagnostics) {
+            console.error(`[react-helmet-pro:callback] Error in lifecycle callback:`, error);
+          }
+        }
       });
     };
 

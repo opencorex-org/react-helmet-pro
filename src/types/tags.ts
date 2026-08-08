@@ -158,6 +158,7 @@ export interface HelmetProviderProps {
   enableDevDiagnostics?: boolean;
   helmetData?: HelmetDataContainer;
   nonce?: string;
+  onError?: (error: Error, info: { phase: "commit" | "callback" | "listener"; state?: HelmetState }) => void;
 }
 
 export interface HelmetContextValue extends HelmetState {
