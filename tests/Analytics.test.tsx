@@ -11,7 +11,7 @@ import { HelmetProvider } from "../src/context/HelmetProvider";
 describe("Analytics", () => {
   beforeEach(() => {
     // jsdom is configured to load script resources; keep unit tests offline.
-    vi.spyOn(HTMLScriptElement.prototype, "src", "set").mockImplementation(function (value) {
+    vi.spyOn(HTMLScriptElement.prototype, "src", "set").mockImplementation(function (this: HTMLScriptElement, value) {
       this.setAttribute("data-test-src", value);
     });
   });

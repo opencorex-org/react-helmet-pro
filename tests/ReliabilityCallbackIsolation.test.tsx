@@ -116,6 +116,9 @@ describe("Reliability & Failure Isolation Suite", () => {
       dispatcher.upsert("test-id", {
         base: [], link: [], meta: [], noscript: [], script: [], style: [],
         htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {},
+        defer: true,
+        encodeSpecialCharacters: true,
+        prioritizeSeoTags: false,
         onChangeClientState: callback
       }, 0);
 

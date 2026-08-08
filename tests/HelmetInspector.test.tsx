@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 // instead we import the source module directly.
 
 describe("HelmetInspector (dev-only)", () => {
-  let HelmetInspector: React.ComponentType<{ position?: string; maxHistory?: number }>;
+  let HelmetInspector: React.ComponentType<{ position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"; maxHistory?: number }>;
   let HelmetProvider: React.ComponentType<{ children: React.ReactNode }>;
   let ProductSeo: React.ComponentType<{
     title: string;

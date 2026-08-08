@@ -127,7 +127,8 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
               order: 1,
               data: {
                 meta: metas.slice(0, 5), link: links.slice(0, 5), base: [], script: [], style: [], noscript: [],
-                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {},
+                defer: true, encodeSpecialCharacters: true, prioritizeSeoTags: false
               }
             },
             {
@@ -135,7 +136,8 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
               order: 2,
               data: {
                 meta: metas.slice(5, 10), link: links.slice(5, 10), base: [], script: [], style: [], noscript: [],
-                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {},
+                defer: true, encodeSpecialCharacters: true, prioritizeSeoTags: false
               }
             },
             {
@@ -143,7 +145,8 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
               order: 3,
               data: {
                 meta: metas.slice(10, 15), link: links.slice(10, 15), base: [], script: [], style: [], noscript: [],
-                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {},
+                defer: true, encodeSpecialCharacters: true, prioritizeSeoTags: false
               }
             }
           ];
