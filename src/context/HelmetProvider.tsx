@@ -19,6 +19,7 @@ const HelmetProviderBase: React.FC<HelmetProviderProps> = ({
   context,
   defaults,
   enableDevDiagnostics,
+  onError,
 }) => {
   const parentContext = useContext(HelmetContext);
 
@@ -37,8 +38,9 @@ const HelmetProviderBase: React.FC<HelmetProviderProps> = ({
       context,
       enableDevDiagnostics,
       manageDom: getCanUseDOM(),
+      onError,
     });
-  }, [auditOptions, context, enableDevDiagnostics, parentContext?.dispatcher]);
+  }, [auditOptions, context, enableDevDiagnostics, parentContext?.dispatcher, onError]);
 
   const [state, setState] = useState(() => dispatcher.getState());
 
