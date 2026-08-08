@@ -73,7 +73,6 @@
       "default": "./dist/testing/vitest.js"
     }
   },
-
   "scripts": {
     "build": "tsc",
     "dev": "node_modules/.pnpm/node_modules/.bin/vite --config examples/vite.config.examples.ts",
@@ -114,7 +113,8 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.14.1",
-    "@types/react": "^19.1.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^26.0.0",
     "react": "^19.0.0",
