@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import React from "react";
+import { Helmet } from "./Helmet";
 
 /** A Google tag ID supported by gtag.js. */
 export type GoogleTagId =
@@ -38,32 +39,18 @@ export const createGoogleTagUrl = (id: GoogleTagId): string => {
 };
 
 export const Analytics = ({ type, id, nonce }: AnalyticsProps) => {
-  useEffect(() => {
-    if (type !== "gtag" || !isGoogleTagId(id)) {
-      return;
-    }
+  if (type !== "gtag" || !isGoogleTagId(id)) {
+    return null;
+  }
 
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = createGoogleTagUrl(id);
-    script.dataset.gtagLoader = id;
+  const src = createGoogleTagUrl(id);
 
-    const inlineScript = document.createElement("script");
-    inlineScript.dataset.gtagId = id;
-    inlineScript.textContent = GTAG_BOOTSTRAP;
-
-    if (nonce) {
-      script.nonce = nonce;
-      inlineScript.nonce = nonce;
-    }
-
-    document.head.append(script, inlineScript);
-
-    return () => {
-      script.remove();
-      inlineScript.remove();
-    };
-  }, [type, id, nonce]);
-
-  return null;
+  return (
+    <Helmet defer={false}>
+      <script async src={src} data-gtag-loader={id} nonce={nonce} />
+      <script data-gtag-id={id} nonce={nonce}>
+        {GTAG_BOOTSTRAP}
+      </script>
+    </Helmet>
+  );
 };

@@ -1,10 +1,12 @@
-import { render, waitFor } from "@testing-library/react";
+import React from "react";
+import { render, waitFor, cleanup } from "@testing-library/react";
 import {
   Analytics,
   createGoogleTagUrl,
   isGoogleTagId,
   type GoogleTagId,
 } from "../src/components/Analytics";
+import { HelmetProvider } from "../src/context/HelmetProvider";
 
 describe("Analytics", () => {
   beforeEach(() => {
@@ -15,6 +17,7 @@ describe("Analytics", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
     document.head
       .querySelectorAll("script[data-gtag-id], script[data-gtag-loader]")
@@ -74,5 +77,100 @@ describe("Analytics", () => {
     await waitFor(() => {
       expect(document.head.querySelectorAll("script[nonce='nonce-value']")).toHaveLength(2);
     });
+  });
+
+  it("removes scripts on unmount", async () => {
+    const { unmount } = render(<Analytics type="gtag" id="G-ABC123" />);
+
+    await waitFor(() => {
+      expect(document.head.querySelector('script[data-gtag-id="G-ABC123"]')).not.toBeNull();
+    });
+
+    unmount();
+
+    await waitFor(() => {
+      expect(document.head.querySelector('script[data-gtag-id="G-ABC123"]')).toBeNull();
+    });
+  });
+
+  it("prevents duplicate scripts in React Strict Mode", async () => {
+    render(
+      <React.StrictMode>
+        <Analytics type="gtag" id="G-ABC123" />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => {
+      expect(document.head.querySelectorAll('script[data-gtag-id="G-ABC123"]')).toHaveLength(1);
+      expect(document.head.querySelectorAll('script[data-gtag-loader="G-ABC123"]')).toHaveLength(1);
+    });
+  });
+
+  it("removes old scripts and appends new ones when the ID updates", async () => {
+    const { rerender } = render(
+      <HelmetProvider><Analytics type="gtag" id="G-ABC123" /></HelmetProvider>
+    );
+
+    await waitFor(() => {
+      expect(document.head.querySelector('script[data-gtag-id="G-ABC123"]')).not.toBeNull();
+    });
+
+    rerender(
+      <HelmetProvider><Analytics type="gtag" id="G-XYZ789" /></HelmetProvider>
+    );
+
+    await waitFor(() => {
+      expect(document.head.querySelector('script[data-gtag-id="G-ABC123"]')).toBeNull();
+      expect(document.head.querySelector('script[data-gtag-id="G-XYZ789"]')).not.toBeNull();
+    });
+  });
+
+  it("deduplicates identical Analytics instances and cleans up when all are unmounted", async () => {
+    // Render two instances with the same ID in the same provider tree — Helmet deduplicates them
+    const { unmount: unmountA } = render(
+      <HelmetProvider>
+        <Analytics type="gtag" id="G-ABC123" />
+        <Analytics type="gtag" id="G-ABC123" />
+      </HelmetProvider>
+    );
+
+    await waitFor(() => {
+      // Helmet deduplication keeps exactly one script for the same ID
+      expect(document.head.querySelectorAll('script[data-gtag-id="G-ABC123"]')).toHaveLength(1);
+    });
+
+    unmountA();
+
+    // After full unmount, all managed scripts should be removed
+    await waitFor(() => {
+      expect(document.head.querySelector('script[data-gtag-id="G-ABC123"]')).toBeNull();
+    });
+  });
+
+  it("preserves existing third-party scripts on unmount", async () => {
+    // Inject third-party script manually without Helmet's data-react-helmet-pro marker
+    const thirdParty = document.createElement("script");
+    thirdParty.dataset.gtagId = "G-ABC123";
+    thirdParty.textContent = "/* third-party config */";
+    document.head.appendChild(thirdParty);
+
+    const { unmount } = render(<Analytics type="gtag" id="G-ABC123" />);
+
+    // Expect both: the third-party script and the Helmet-managed inline script
+    await waitFor(() => {
+      expect(document.head.querySelectorAll('script[data-gtag-id="G-ABC123"]')).toHaveLength(2);
+    });
+
+    unmount();
+
+    // After unmount, only the manually-injected third-party script should remain
+    await waitFor(() => {
+      expect(document.head.querySelectorAll('script[data-gtag-id="G-ABC123"]')).toHaveLength(1);
+      const remainingScript = document.head.querySelector('script[data-gtag-id="G-ABC123"]');
+      expect(remainingScript?.textContent).toContain("third-party");
+    });
+
+    // Cleanup manual script
+    thirdParty.remove();
   });
 });
