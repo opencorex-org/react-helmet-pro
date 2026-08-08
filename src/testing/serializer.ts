@@ -62,8 +62,8 @@ export const helmetSnapshotSerializer = {
     ) {
       return true;
     }
-    // Test if it is a raw HTML/SSR head string (has head/title/meta tags)
-    if (typeof val === "string" && (val.includes("<meta") || val.includes("<link") || val.includes("<title"))) {
+    // Test if it is a raw HTML/SSR head string (has any supported head tags)
+    if (typeof val === "string" && /<\/?(title|meta|link|script|style|noscript)\b/i.test(val)) {
       return true;
     }
     return false;
