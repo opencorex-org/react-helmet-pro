@@ -28,8 +28,8 @@ describe("Stable Snapshot Serializer", () => {
       <title class="my-title">Deterministic Page Title</title>
       <meta content="A premium helmet library" name="description" />
       <meta content="width=device-width" name="viewport" />
-      <link href="https://example.com/fr" hreflang="fr" rel="alternate" />
       <link href="https://example.com/canonical" rel="canonical" />
+      <link href="https://example.com/fr" hreflang="fr" rel="alternate" />
       <script type="application/ld+json">{
         "@type": "Product",
         "name": "Premium Pack"
@@ -50,4 +50,32 @@ describe("Stable Snapshot Serializer", () => {
       <link href="https://example.com" rel="canonical" />
     `);
   });
+
+  it("resolves ties by total sort keys for duplicate tags or identical primary keys", () => {
+    // Scrambled input with duplicate names/rel/types but different other properties
+    const scrambledHtml = `
+      <meta name="robots" content="noindex" />
+      <meta name="robots" content="follow" />
+      <link rel="alternate" hreflang="es" href="https://example.com/es" />
+      <link rel="alternate" hreflang="en" href="https://example.com/en" />
+      <script type="application/ld+json">{"name": "Z"}</script>
+      <script type="application/ld+json">{"name": "A"}</script>
+    `;
+
+    // Should sort Spanish alternate after English, and robots "follow" before "noindex" (F comes before N)
+    // And JSON-LD scripts by content alphabetically ("A" before "Z")
+    expect(scrambledHtml).toMatchInlineSnapshot(`
+      <meta content="follow" name="robots" />
+      <meta content="noindex" name="robots" />
+      <link href="https://example.com/en" hreflang="en" rel="alternate" />
+      <link href="https://example.com/es" hreflang="es" rel="alternate" />
+      <script type="application/ld+json">{
+        "name": "A"
+      }</script>
+      <script type="application/ld+json">{
+        "name": "Z"
+      }</script>
+    `);
+  });
 });
+

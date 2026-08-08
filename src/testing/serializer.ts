@@ -92,12 +92,15 @@ export const helmetSnapshotSerializer = {
       lines.push(formatTag("title", state.titleAttributes || {}, state.title));
     }
 
-    // Base
-    if (state.base && state.base.length > 0) {
-      state.base.forEach((b) => {
-        lines.push(formatTag("base", b as any));
-      });
-    }
+    // Base (sorted alphabetically by all attributes)
+    const sortedBases = [...(state.base || [])].sort((a, b) => {
+      const keyA = JSON.stringify(sortAttributes(a));
+      const keyB = JSON.stringify(sortAttributes(b));
+      return keyA.localeCompare(keyB);
+    });
+    sortedBases.forEach((b) => {
+      lines.push(formatTag("base", b as any));
+    });
 
     // HTML Attributes
     if (state.htmlAttributes && Object.keys(state.htmlAttributes).length > 0) {
@@ -109,10 +112,10 @@ export const helmetSnapshotSerializer = {
       lines.push(`<!-- bodyAttributes: ${JSON.stringify(sortAttributes(state.bodyAttributes))} -->`);
     }
 
-    // Meta tags: sorted by name, property, then content
+    // Meta tags: sorted alphabetically by all attributes
     const sortedMetas = [...(state.meta || [])].sort((a, b) => {
-      const keyA = String(a.name || a.property || JSON.stringify(a));
-      const keyB = String(b.name || b.property || JSON.stringify(b));
+      const keyA = JSON.stringify(sortAttributes(a));
+      const keyB = JSON.stringify(sortAttributes(b));
       return keyA.localeCompare(keyB);
     });
     sortedMetas.forEach((m) => {
@@ -125,10 +128,10 @@ export const helmetSnapshotSerializer = {
       lines.push(formatTag("meta", attrs));
     });
 
-    // Link tags: sorted by rel, hrefLang, then href
+    // Link tags: sorted alphabetically by all attributes
     const sortedLinks = [...(state.link || [])].sort((a, b) => {
-      const keyA = `${String(a.rel || "")}:${String(a.hrefLang || "")}:${String(a.href || "")}`;
-      const keyB = `${String(b.rel || "")}:${String(b.hrefLang || "")}:${String(b.href || "")}`;
+      const keyA = JSON.stringify(sortAttributes(a));
+      const keyB = JSON.stringify(sortAttributes(b));
       return keyA.localeCompare(keyB);
     });
     sortedLinks.forEach((l) => {
@@ -143,10 +146,10 @@ export const helmetSnapshotSerializer = {
       lines.push(formatTag("link", attrs));
     });
 
-    // Script tags: sorted by src or type or content length
+    // Script tags: sorted by all attributes + innerHTML content
     const sortedScripts = [...(state.script || [])].sort((a, b) => {
-      const keyA = String(a.src || a.type || String(a.innerHTML?.length || 0));
-      const keyB = String(b.src || b.type || String(b.innerHTML?.length || 0));
+      const keyA = `${JSON.stringify(sortAttributes(a))}:${a.innerHTML || ""}`;
+      const keyB = `${JSON.stringify(sortAttributes(b))}:${b.innerHTML || ""}`;
       return keyA.localeCompare(keyB);
     });
     sortedScripts.forEach((s) => {
@@ -156,10 +159,10 @@ export const helmetSnapshotSerializer = {
       lines.push(formatTag("script", attrs, s.innerHTML || ""));
     });
 
-    // Style tags
+    // Style tags: sorted by all attributes + cssText content
     const sortedStyles = [...(state.style || [])].sort((a, b) => {
-      const keyA = String(a.media || String(a.cssText?.length || 0));
-      const keyB = String(b.media || String(b.cssText?.length || 0));
+      const keyA = `${JSON.stringify(sortAttributes(a))}:${a.cssText || ""}`;
+      const keyB = `${JSON.stringify(sortAttributes(b))}:${b.cssText || ""}`;
       return keyA.localeCompare(keyB);
     });
     sortedStyles.forEach((st) => {
@@ -168,9 +171,11 @@ export const helmetSnapshotSerializer = {
       lines.push(formatTag("style", attrs, st.cssText || ""));
     });
 
-    // Noscript tags
+    // Noscript tags: sorted by innerHTML content
     const sortedNoscripts = [...(state.noscript || [])].sort((a, b) => {
-      return String(a.innerHTML?.length || 0).localeCompare(String(b.innerHTML?.length || 0));
+      const keyA = a.innerHTML || "";
+      const keyB = b.innerHTML || "";
+      return keyA.localeCompare(keyB);
     });
     sortedNoscripts.forEach((ns) => {
       lines.push(formatTag("noscript", {}, ns.innerHTML || ""));
