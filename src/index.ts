@@ -55,4 +55,5 @@ export * from './utils/pagination';
 export * from './next';
 export * from './adapters';
 export * from './types';
+export type { SchemaPerson } from './types';
 

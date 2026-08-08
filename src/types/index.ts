@@ -10,3 +10,4 @@ export * from "./tags";
 export * from "./urlPolicy";
 export * from "./verticalSeo";
 export * from "./adapters";
+export * from "./schemaOrg";

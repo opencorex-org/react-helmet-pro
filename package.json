@@ -63,8 +63,17 @@
     "./inspector": {
       "types": "./dist/inspector/index.d.ts",
       "default": "./dist/inspector/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    },
+    "./testing/vitest": {
+      "types": "./dist/testing/vitest.d.ts",
+      "default": "./dist/testing/vitest.js"
     }
   },
+
   "scripts": {
     "build": "tsc",
     "dev": "node_modules/.pnpm/node_modules/.bin/vite --config examples/vite.config.examples.ts",

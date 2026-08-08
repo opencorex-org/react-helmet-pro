@@ -1845,7 +1845,89 @@ export function App() {
 
 ---
 
+## SEO Testing Utilities (`react-helmet-pro/testing`)
+
+Ensure your SEO configurations are correct without resorting to fragile CSS/DOM selectors. This subpath exports custom Vitest/Jest matchers and a stable snapshot serializer.
+
+### Matchers
+
+Register matchers by extending your assertion library in a setup file (e.g. `vitest.setup.ts` or `setupTests.js`):
+
+```ts
+import { expect } from 'vitest';
+import { seoMatchers } from 'react-helmet-pro/testing';
+
+expect.extend(seoMatchers);
+```
+
+Or programmatically register automatically:
+
+```ts
+import { registerMatchers } from 'react-helmet-pro/testing';
+registerMatchers();
+```
+
+| Matcher | Description | Signature | Supports |
+|---|---|---|---|
+| `toHaveCanonical` | Asserts canonical URL presence and correctness | `expect(received).toHaveCanonical(url)` | DOM, HTML string, `HelmetState` |
+| `toBeIndexable` | Asserts that robots/googlebot tags do not have `noindex` | `expect(received).toBeIndexable()` | DOM, HTML string, `HelmetState` |
+| `toHaveHreflang` | Asserts localized alternate link and matching URL | `expect(received).toHaveHreflang(lang, href?)` | DOM, HTML string, `HelmetState` |
+| `toHaveValidStructuredData` | Asserts parseable JSON-LD, matching type, and optional schema shape | `expect(received).toHaveValidStructuredData(type?, schema?)` | DOM, HTML string, `HelmetState` |
+
+#### Examples:
+
+```ts
+// HTML Strings
+expect(ssrHtml).toHaveCanonical('https://example.com/canonical');
+expect(ssrHtml).toBeIndexable();
+
+// Helmet State (after rewind/peek)
+const state = helmetData.context.helmet;
+expect(state).toHaveHreflang('es', 'https://example.com/es');
+
+// DOM Elements
+expect(document.head).toHaveValidStructuredData('Product', {
+  name: 'Standard Subscription Plan',
+  offers: { priceCurrency: 'USD' }
+});
+```
+
+---
+
+### Stable Snapshot Serializer
+
+Test suites often suffer from unstable head tag order snapshots. The custom snapshot serializer sorts tags alphabetically by type, then orders them by name, property, rel, or src attributes.
+
+Register the serializer globally in your test setup:
+
+```ts
+import { expect } from 'vitest';
+import { helmetSnapshotSerializer } from 'react-helmet-pro/testing';
+
+expect.addSnapshotSerializer(helmetSnapshotSerializer);
+```
+
+#### Deterministic Snapshot Output Example:
+
+```ts
+// Testing a chaotic head string:
+const chaoticHead = `
+  <link rel="canonical" href="https://example.com" />
+  <meta name="description" content="Stable snapshot example" />
+  <title>Deterministic Snapshot</title>
+`;
+
+expect(chaoticHead).toMatchInlineSnapshot(`
+  <title>Deterministic Snapshot</title>
+  <meta content="Stable snapshot example" name="description" />
+  <link href="https://example.com" rel="canonical" />
+`);
+```
+
+---
+
 ## Next.js Helpers
+
 
 These helpers return plain objects that fit modern Next.js App Router SEO APIs.
 

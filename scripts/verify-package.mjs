@@ -60,6 +60,8 @@ try {
     'package/dist/cli/bin.js',
     'package/dist/eslint/index.js',
     'package/dist/inspector/index.js',
+    'package/dist/testing/index.js',
+    'package/dist/testing/vitest.js',
   ];
 
   for (const entry of requiredEntries) {
@@ -106,7 +108,7 @@ try {
     [
       '--input-type=module',
       '--eval',
-      "const main = await import('react-helmet-pro'); const rr = await import('react-helmet-pro/react-router'); const remix = await import('react-helmet-pro/remix'); const astro = await import('react-helmet-pro/astro'); const viteSsr = await import('react-helmet-pro/vite-ssr'); const express = await import('react-helmet-pro/express'); const fastify = await import('react-helmet-pro/fastify'); const hono = await import('react-helmet-pro/hono'); const server = await import('react-helmet-pro/server'); const adapters = await import('react-helmet-pro/adapters'); const cli = await import('react-helmet-pro/cli'); const eslint = await import('react-helmet-pro/eslint'); if (!main.Helmet || !rr.toReactRouterMeta || !remix.toRemixMeta || !astro.collectAstroHead || !viteSsr.injectHelmetIntoHtml || !express.expressHelmetMiddleware || !fastify.fastifyHelmetPlugin || !hono.honoHelmetMiddleware || !server.extractXRobotsTagHeader || !adapters.toReactRouterMeta || !cli.runAudit || !eslint.default) throw new Error('Adapter or tooling exports are missing');",
+      "const main = await import('react-helmet-pro'); const rr = await import('react-helmet-pro/react-router'); const remix = await import('react-helmet-pro/remix'); const astro = await import('react-helmet-pro/astro'); const viteSsr = await import('react-helmet-pro/vite-ssr'); const express = await import('react-helmet-pro/express'); const fastify = await import('react-helmet-pro/fastify'); const hono = await import('react-helmet-pro/hono'); const server = await import('react-helmet-pro/server'); const adapters = await import('react-helmet-pro/adapters'); const cli = await import('react-helmet-pro/cli'); const eslint = await import('react-helmet-pro/eslint'); const testing = await import('react-helmet-pro/testing'); const testingVitest = await import('react-helmet-pro/testing/vitest'); if (!main.Helmet || !rr.toReactRouterMeta || !remix.toRemixMeta || !astro.collectAstroHead || !viteSsr.injectHelmetIntoHtml || !express.expressHelmetMiddleware || !fastify.fastifyHelmetPlugin || !hono.honoHelmetMiddleware || !server.extractXRobotsTagHeader || !adapters.toReactRouterMeta || !cli.runAudit || !eslint.default || !testing.registerMatchers || !testing.helmetSnapshotSerializer || !testingVitest.registerMatchers) throw new Error('Adapter, tooling, testing, or vitest testing exports are missing');",
     ],
     { cwd: fixtureDirectory, stdio: 'inherit' },
   );
