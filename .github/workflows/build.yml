@@ -44,7 +44,7 @@ jobs:
 
       - name: Typecheck
         run: |
-          pnpm exec tsc --noEmit
+          pnpm exec tsc --noEmit -p tsconfig.test.json
           pnpm exec tsc --noEmit -p examples/tsconfig.json
 
       - name: Build

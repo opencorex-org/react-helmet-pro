@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import { StructuredDataGraph } from "../src/components/StructuredDataGraph";
 import { HelmetProvider } from "../src/context/HelmetProvider";
 import { auditHelmetState } from "../src/core/auditHelmetState";
-import { createHelmetState } from "../src/core/HelmetData";
 import type { HelmetServerContext } from "../src/types";
 import {
   createEntityRef,
@@ -106,7 +105,8 @@ describe("JSON-LD graph composition, entity registry, and deduplication", () => 
 
       const output = graph.toGraphObject();
       expect(output["@graph"]).toHaveLength(2);
-      expect(output["@graph"][0].founder.worksFor.founder).toEqual({
+      const firstNode = output["@graph"][0] as Record<string, Record<string, Record<string, unknown>>>;
+      expect(firstNode.founder.worksFor.founder).toEqual({
         "@id": "https://example.com/#person",
       });
     });
@@ -166,7 +166,7 @@ describe("JSON-LD graph composition, entity registry, and deduplication", () => 
       const state = {
         base: [],
         bodyAttributes: {},
-        htmlAttributes: [],
+        htmlAttributes: {},
         link: [],
         meta: [],
         noscript: [],
@@ -184,6 +184,9 @@ describe("JSON-LD graph composition, entity registry, and deduplication", () => 
         style: [],
         title: "",
         titleAttributes: {},
+        defer: false,
+        encodeSpecialCharacters: true,
+        prioritizeSeoTags: false,
       };
 
       const audit = auditHelmetState(state, { context: "seo" });

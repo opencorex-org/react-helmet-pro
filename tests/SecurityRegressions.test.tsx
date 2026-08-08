@@ -29,7 +29,7 @@ describe('Security Regressions & Request Isolation Suite', () => {
       );
       
       const { helmet } = helmetData.context;
-      expect(helmet.title.toString()).toContain('&lt;/title&gt;&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+      expect(helmet!.title.toString()).toContain('&lt;/title&gt;&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
     });
 
     it('escapes unsafe attribute values in meta tags', () => {
@@ -45,7 +45,7 @@ describe('Security Regressions & Request Isolation Suite', () => {
       );
       
       const { helmet } = helmetData.context;
-      expect(helmet.meta.toString()).toContain('content="description&quot; content=&quot;breakout&quot; style=&quot;color:red&quot; data-xss=&quot;"');
+      expect(helmet!.meta.toString()).toContain('content="description&quot; content=&quot;breakout&quot; style=&quot;color:red&quot; data-xss=&quot;"');
     });
 
     it('XSS prevention in structured data using safeJsonLdStringify', () => {
@@ -80,8 +80,8 @@ describe('Security Regressions & Request Isolation Suite', () => {
       );
       
       const { helmet } = helmetData.context;
-      expect(helmet.script.toString()).toContain(`nonce="${cspNonce}"`);
-      expect(helmet.style.toString()).toContain(`nonce="${cspNonce}"`);
+      expect(helmet!.script.toString()).toContain(`nonce="${cspNonce}"`);
+      expect(helmet!.style.toString()).toContain(`nonce="${cspNonce}"`);
     });
   });
 
@@ -116,17 +116,17 @@ describe('Security Regressions & Request Isolation Suite', () => {
       const results = await Promise.all(promises);
 
       // Verify that states are fully isolated and not bleeding or overlapping
-      expect(results[0].title.toString()).toContain('Request 1 Title');
-      expect(results[0].meta.toString()).toContain('content="1"');
+      expect(results[0]!.title.toString()).toContain('Request 1 Title');
+      expect(results[0]!.meta.toString()).toContain('content="1"');
 
-      expect(results[1].title.toString()).toContain('Request 2 Title');
-      expect(results[1].meta.toString()).toContain('content="2"');
+      expect(results[1]!.title.toString()).toContain('Request 2 Title');
+      expect(results[1]!.meta.toString()).toContain('content="2"');
 
-      expect(results[2].title.toString()).toContain('Request 3 Title');
-      expect(results[2].meta.toString()).toContain('content="3"');
+      expect(results[2]!.title.toString()).toContain('Request 3 Title');
+      expect(results[2]!.meta.toString()).toContain('content="3"');
 
-      expect(results[3].title.toString()).toContain('Request 4 Title');
-      expect(results[3].meta.toString()).toContain('content="4"');
+      expect(results[3]!.title.toString()).toContain('Request 4 Title');
+      expect(results[3]!.meta.toString()).toContain('content="4"');
     });
   });
 });

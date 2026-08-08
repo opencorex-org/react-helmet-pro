@@ -53,7 +53,8 @@ describe("Helmet", () => {
     render(
       <HelmetProvider>
         <Helmet>
-          <html lang="en" amp />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <html lang="en" {...({ amp: true } as any)} />
           <body className="root" data-page="home" />
           <title itemProp="name">Nested Title</title>
           <meta property="og:title" content="Nested component" />
