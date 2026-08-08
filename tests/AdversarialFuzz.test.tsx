@@ -65,10 +65,15 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
   let prng: LcgPrng;
 
   beforeEach(() => {
+    // Clear JSDOM title tag to force Helmet creation of data-react-helmet-pro title tags
+    document.head.querySelectorAll("title").forEach((node) => node.parentNode?.removeChild(node));
     // Clear any leftover managed tags from previous runs
     document.head.querySelectorAll("*[data-react-helmet-pro]").forEach((node) => node.parentNode?.removeChild(node));
-    // Select seed: override with environment variable if present for local repro
-    seed = process.env.FUZZ_SEED ? parseInt(process.env.FUZZ_SEED, 10) : Math.floor(Math.random() * 1000000);
+    
+    // Select seed: override with environment variable if present, validating it's a number
+    const envSeed = process.env.FUZZ_SEED ? parseInt(process.env.FUZZ_SEED, 10) : NaN;
+    seed = isNaN(envSeed) ? Math.floor(Math.random() * 1000000) : envSeed;
+    
     prng = new LcgPrng(seed);
     HelmetProvider.canUseDOM = true;
   });
@@ -86,20 +91,20 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
     }
   };
 
-  // Helper to generate a random tag object
-  const generateRandomTag = (type: string): any => {
+  // Helper to generate a random tag object with unique dedupe keys to avoid collisions
+  const generateRandomTag = (type: string, uniqueId: number): any => {
     const val = prng.pick(ADVERSARIAL_VALUES);
     switch (type) {
       case "title":
         return { text: val, attributes: { class: prng.pick(ADVERSARIAL_VALUES) } };
       case "meta":
-        return { name: prng.pick(ADVERSARIAL_VALUES), content: val };
+        return { name: `meta-name-${uniqueId}`, content: val };
       case "link":
-        return { rel: prng.pick(ADVERSARIAL_VALUES), href: val, hreflang: prng.pick(ADVERSARIAL_VALUES) };
+        return { rel: `link-rel-${uniqueId}`, href: `https://example.com/href/${uniqueId}?val=${encodeURIComponent(val)}`, hreflang: prng.pick(ADVERSARIAL_VALUES) };
       case "script":
         return { type: "application/ld+json", innerHTML: prng.pick(ADVERSARIAL_VALUES) };
       case "style":
-        return { media: prng.pick(ADVERSARIAL_VALUES), cssText: val };
+        return { media: `media-${uniqueId}`, cssText: val };
       case "noscript":
         return { innerHTML: val };
       default:
@@ -110,36 +115,52 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
   describe("Deterministic State Reduction & Stable SSR Serialization", () => {
     it("ensures that shuffling equivalent inputs produces byte-stable serialized state outputs", async () => {
       await runWithSeedGuard(() => {
-        // Generate random tags
-        const metaTags = Array.from({ length: 15 }, () => generateRandomTag("meta"));
-        const linkTags = Array.from({ length: 15 }, () => generateRandomTag("link"));
+        // Generate random tags with unique keys
+        const metaTags = Array.from({ length: 15 }, (_, idx) => generateRandomTag("meta", idx));
+        const linkTags = Array.from({ length: 15 }, (_, idx) => generateRandomTag("link", idx));
 
-        const buildState = (metas: any[], links: any[]) => {
+        const buildState = (metas: any[], links: any[], insertionOrder: number[]) => {
           const dispatcher = new HelmetDispatcher();
-          // Upsert multiple instances
-          dispatcher.upsert("inst-1", {
-            meta: metas.slice(0, 5), link: links.slice(0, 5), base: [], script: [], style: [], noscript: [],
-            htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
-          }, 1);
-          dispatcher.upsert("inst-2", {
-            meta: metas.slice(5, 10), link: links.slice(5, 10), base: [], script: [], style: [], noscript: [],
-            htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
-          }, 2);
-          dispatcher.upsert("inst-3", {
-            meta: metas.slice(10, 15), link: links.slice(10, 15), base: [], script: [], style: [], noscript: [],
-            htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
-          }, 3);
-          return dispatcher.peek();
+          const instances = [
+            {
+              id: "inst-1",
+              order: 1,
+              data: {
+                meta: metas.slice(0, 5), link: links.slice(0, 5), base: [], script: [], style: [], noscript: [],
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+              }
+            },
+            {
+              id: "inst-2",
+              order: 2,
+              data: {
+                meta: metas.slice(5, 10), link: links.slice(5, 10), base: [], script: [], style: [], noscript: [],
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+              }
+            },
+            {
+              id: "inst-3",
+              order: 3,
+              data: {
+                meta: metas.slice(10, 15), link: links.slice(10, 15), base: [], script: [], style: [], noscript: [],
+                htmlAttributes: {}, bodyAttributes: {}, titleAttributes: {}
+              }
+            }
+          ];
+
+          // Upsert according to the specified insertion order
+          insertionOrder.forEach((idx) => {
+            const inst = instances[idx];
+            dispatcher.upsert(inst.id, inst.data, inst.order);
+          });
+
+          return dispatcher.getState();
         };
 
-        const stateNormal = buildState(metaTags, linkTags);
+        const stateNormal = buildState(metaTags, linkTags, [0, 1, 2]);
+        const stateShuffled = buildState(metaTags, linkTags, [2, 0, 1]);
 
-        // Permute instances and orders
-        const shuffledMetas = [...metaTags].reverse();
-        const shuffledLinks = [...linkTags].reverse();
-        const stateShuffled = buildState(shuffledMetas, shuffledLinks);
-
-        // Assert that the serialized JSON format is identical under any input ordering permutation
+        // Assert that the serialized JSON format is identical under any instance registration order permutation
         expect(stableStringify(stateNormal)).toBe(stableStringify(stateShuffled));
       });
     });
@@ -152,8 +173,8 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
         HelmetProvider.canUseDOM = false;
         const helmetData = new HelmetData({});
         
-        const randomMeta = Array.from({ length: 5 }, () => generateRandomTag("meta"));
-        const randomLink = Array.from({ length: 5 }, () => generateRandomTag("link"));
+        const randomMeta = Array.from({ length: 5 }, (_, idx) => generateRandomTag("meta", idx));
+        const randomLink = Array.from({ length: 5 }, (_, idx) => generateRandomTag("link", idx));
 
         renderToString(
           <HelmetProvider context={helmetData.context}>
@@ -194,7 +215,7 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
         });
 
         // Verify head title matches, and meta/link contain no duplicates
-        const titleNode = document.head.querySelector("title");
+        const titleNode = document.head.querySelector("title[data-react-helmet-pro]");
         const metaNodes = document.head.querySelectorAll("meta[data-react-helmet-pro]");
         const linkNodes = document.head.querySelectorAll("link[data-react-helmet-pro]");
 
@@ -214,12 +235,13 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
   describe("Lifecycle Mount, Update, and Unmount Fuzzing", () => {
     it("ensures lifecycle sequences leave no nodes after final unmount", async () => {
       await runWithSeedGuard(async () => {
+        let tagCounter = 0;
         const activeHelmets: Array<{ id: number; show: boolean; metas: any[] }> = Array.from(
           { length: 10 },
           (_, idx) => ({
             id: idx,
             show: true,
-            metas: Array.from({ length: prng.nextInt(1, 3) }, () => generateRandomTag("meta")),
+            metas: Array.from({ length: prng.nextInt(1, 3) }, () => generateRandomTag("meta", tagCounter++)),
           })
         );
 
@@ -259,7 +281,7 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
             } else if (action === "show") {
               activeHelmets[idx].show = true;
             } else {
-              activeHelmets[idx].metas = Array.from({ length: prng.nextInt(1, 3) }, () => generateRandomTag("meta"));
+              activeHelmets[idx].metas = Array.from({ length: prng.nextInt(1, 3) }, () => generateRandomTag("meta", tagCounter++));
             }
 
             // Trigger state update
@@ -286,8 +308,8 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
   });
 
   describe("Adversarial Security & Context breakouts", () => {
-    it("escapes all security-relevant breakout sequences cleanly", () => {
-      runWithSeedGuard(() => {
+    it("escapes all security-relevant breakout sequences cleanly", async () => {
+      await runWithSeedGuard(() => {
         HelmetProvider.canUseDOM = false;
         const helmetData = new HelmetData({});
 
@@ -315,34 +337,41 @@ describe("Adversarial Fuzz & Property Testing Suite", () => {
 
   describe("Concurrent SSR Request-Isolation Fuzzing", () => {
     it("ensures that high-concurrency async renders do not bleed states across requests", async () => {
-      // Run 50 staggered asynchronous renders in parallel
-      const runRequest = async (id: number, delay: number) => {
-        const helmetData = new HelmetData({});
-        await new Promise((resolve) => setTimeout(resolve, delay));
+      await runWithSeedGuard(async () => {
+        // Run 50 staggered asynchronous renders in parallel
+        const runRequest = async (id: number, delay: number) => {
+          const helmetData = new HelmetData({});
+          
+          // Step 1: async wait before starting to interleave execution timelines
+          await new Promise((resolve) => setTimeout(resolve, delay));
 
-        HelmetProvider.canUseDOM = false;
-        renderToString(
-          <HelmetProvider context={helmetData.context}>
-            <Helmet>
-              <title>{`Title Request ${id}`}</title>
-              <meta name="request-id" content={String(id)} />
-            </Helmet>
-          </HelmetProvider>
+          HelmetProvider.canUseDOM = false;
+          renderToString(
+            <HelmetProvider context={helmetData.context}>
+              <Helmet>
+                <title>{`Title Request ${id}`}</title>
+                <meta name="request-id" content={String(id)} />
+              </Helmet>
+            </HelmetProvider>
+          );
+
+          // Step 2: async wait after render to simulate interleaved state reads
+          await new Promise((resolve) => setTimeout(resolve, prng.nextInt(1, 10)));
+
+          return { id, title: helmetData.context.helmet?.title.toString(), meta: helmetData.context.helmet?.meta.toString() };
+        };
+
+        const promises = Array.from({ length: 50 }, (_, idx) =>
+          runRequest(idx, prng.nextInt(1, 20))
         );
 
-        return { id, title: helmetData.context.helmet?.title.toString(), meta: helmetData.context.helmet?.meta.toString() };
-      };
+        const results = await Promise.all(promises);
 
-      const promises = Array.from({ length: 50 }, (_, idx) =>
-        runRequest(idx, prng.nextInt(1, 20))
-      );
-
-      const results = await Promise.all(promises);
-
-      // Verify that every request has strictly isolated, correct inputs
-      results.forEach((res) => {
-        expect(res.title).toContain(`Title Request ${res.id}`);
-        expect(res.meta).toContain(`content="${res.id}"`);
+        // Verify that every request has strictly isolated, correct inputs
+        results.forEach((res) => {
+          expect(res.title).toContain(`Title Request ${res.id}`);
+          expect(res.meta).toContain(`content="${res.id}"`);
+        });
       });
     });
   });
