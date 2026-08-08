@@ -6,16 +6,19 @@ const isDomNode = (val: any): val is Node => {
   return !!(val && typeof val === "object" && typeof val.nodeType === "number");
 };
 
-// Helper to query element from DOM node or document
-const querySelectorAll = (received: any, selector: string): any[] => {
-  if (isDomNode(received)) {
-    const doc = received.nodeType === 9 ? (received as Document) : received.ownerDocument;
-    if (!doc) return [];
-    if (received.nodeType === 9 || received.nodeType === 1) {
-      return Array.from((received as any).querySelectorAll(selector));
-    }
-  }
-  return [];
+// Helper to check if value is a HelmetState object
+const isHelmetState = (received: any): boolean => {
+  if (!received || typeof received !== "object") return false;
+  if (isDomNode(received)) return false;
+
+  return (
+    ("meta" in received && Array.isArray(received.meta)) ||
+    ("link" in received && Array.isArray(received.link)) ||
+    ("script" in received && Array.isArray(received.script)) ||
+    ("style" in received && Array.isArray(received.style)) ||
+    ("noscript" in received && Array.isArray(received.noscript)) ||
+    ("title" in received && (typeof received.title === "string" || received.title === undefined))
+  );
 };
 
 // Main normalizer that extracts specific tag attributes or text
@@ -25,72 +28,60 @@ interface NormalizedTag {
   text?: string;
 }
 
-const normalizeInput = (received: any): NormalizedTag[] => {
+const extractTagsFromDom = (node: Node): NormalizedTag[] => {
   const result: NormalizedTag[] = [];
 
-  if (typeof received === "string") {
-    // 1. Raw HTML or SSR String
-    const state = parseHtmlToHelmetState(received);
-    return convertHelmetStateToTags(state);
-  } else if (
-    received &&
-    typeof received === "object" &&
-    (("meta" in received && Array.isArray((received as any).meta)) ||
-      ("link" in received && Array.isArray((received as any).link)))
-  ) {
-    // 2. HelmetState
-    return convertHelmetStateToTags(received as HelmetState);
-  } else if (isDomNode(received)) {
-    // 3. DOM Document or Element
-    const root = received.nodeType === 9 ? (received as Document).documentElement : (received as Element);
-    if (!root) return [];
+  const isQueryable = node.nodeType === 9 || node.nodeType === 1 || node.nodeType === 11;
+  if (!isQueryable) return [];
 
-    // Extract title
-    const titleEl = root.querySelector("title");
-    if (titleEl) {
-      result.push({
-        tag: "title",
-        attrs: {},
-        text: titleEl.textContent || "",
-      });
+  const extractElement = (el: Element) => {
+    const tag = el.tagName.toLowerCase();
+    if (!["title", "meta", "link", "script", "style", "noscript"].includes(tag)) {
+      return;
     }
-
-    // Extract meta tags
-    const metas = root.querySelectorAll("meta");
-    metas.forEach((meta) => {
-      const attrs: Record<string, string> = {};
-      Array.from(meta.attributes).forEach((attr) => {
-        attrs[attr.name.toLowerCase()] = attr.value;
-      });
-      result.push({ tag: "meta", attrs });
+    const attrs: Record<string, string> = {};
+    Array.from(el.attributes).forEach((attr) => {
+      attrs[attr.name.toLowerCase()] = attr.value;
     });
-
-    // Extract link tags
-    const links = root.querySelectorAll("link");
-    links.forEach((link) => {
-      const attrs: Record<string, string> = {};
-      Array.from(link.attributes).forEach((attr) => {
-        attrs[attr.name.toLowerCase()] = attr.value;
-      });
-      result.push({ tag: "link", attrs });
+    result.push({
+      tag,
+      attrs,
+      text: el.textContent || "",
     });
+  };
 
-    // Extract script tags (especially application/ld+json)
-    const scripts = root.querySelectorAll("script");
-    scripts.forEach((script) => {
-      const attrs: Record<string, string> = {};
-      Array.from(script.attributes).forEach((attr) => {
-        attrs[attr.name.toLowerCase()] = attr.value;
-      });
-      result.push({
-        tag: "script",
-        attrs,
-        text: script.textContent || "",
-      });
+  if (node.nodeType === 1) {
+    extractElement(node as Element);
+  }
+
+  const elements = (node as any).querySelectorAll("*");
+  if (elements) {
+    elements.forEach((el: Element) => {
+      extractElement(el);
     });
   }
 
   return result;
+};
+
+const normalizeInput = (received: any): NormalizedTag[] => {
+  if (typeof received === "string") {
+    // 1. Raw HTML or SSR String
+    const state = parseHtmlToHelmetState(received);
+    return convertHelmetStateToTags(state);
+  }
+  
+  if (isDomNode(received)) {
+    // 2. DOM Node
+    return extractTagsFromDom(received);
+  }
+
+  if (isHelmetState(received)) {
+    // 3. HelmetState
+    return convertHelmetStateToTags(received as HelmetState);
+  }
+
+  return [];
 };
 
 const convertHelmetStateToTags = (state: HelmetState): NormalizedTag[] => {
@@ -228,7 +219,7 @@ export function toHaveValidStructuredData(
     }
   }
 
-  if (errors.length > 0 && parsedSchemas.length === 0) {
+  if (errors.length > 0) {
     return {
       pass: false,
       message: () => `Failed to parse structured data JSON-LD. Parse error: ${errors.join(", ")}`,

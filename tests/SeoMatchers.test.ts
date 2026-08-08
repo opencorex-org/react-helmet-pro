@@ -93,5 +93,38 @@ describe("Custom SEO Matchers", () => {
       const html = '<html><head><script type="application/ld+json">{ invalid json }</script></head></html>';
       expect(html).not.toHaveValidStructuredData();
     });
+
+    it("fails structured data if one of multiple scripts is malformed", () => {
+      const jsonLd = { "@context": "https://schema.org", "@type": "Product", name: "Valid Product" };
+      const html = `<html><head>
+        <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+        <script type="application/ld+json">{ malformed json }</script>
+      </head></html>`;
+      expect(html).not.toHaveValidStructuredData();
+    });
+  });
+
+  describe("Direct DOM Element matching", () => {
+    it("asserts directly on the matching link element", () => {
+      const link = document.createElement("link");
+      link.setAttribute("rel", "canonical");
+      link.setAttribute("href", "https://example.com/direct-match");
+      expect(link).toHaveCanonical("https://example.com/direct-match");
+    });
+  });
+
+  describe("Robust HelmetState predicate", () => {
+    it("matches HelmetState containing only title or script", () => {
+      const stateOnlyTitle: Partial<HelmetState> = {
+        title: "Just Title",
+      };
+      expect(stateOnlyTitle).not.toHaveCanonical("https://example.com"); // matcher runs and returns false, .not inverts to pass
+
+      const stateOnlyScript: Partial<HelmetState> = {
+        script: [{ type: "application/ld+json", innerHTML: '{"@type":"Product","name":"OnlyScript"}' }],
+      };
+      expect(stateOnlyScript).toHaveValidStructuredData("Product");
+    });
   });
 });
+
