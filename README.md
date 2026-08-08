@@ -1896,7 +1896,7 @@ expect(document.head).toHaveValidStructuredData('Product', {
 
 ### Stable Snapshot Serializer
 
-Test suites often suffer from unstable head tag order snapshots. The custom snapshot serializer sorts tags alphabetically by type, then deduplicates/orders by name, property, rel, or src.
+Test suites often suffer from unstable head tag order snapshots. The custom snapshot serializer sorts tags alphabetically by type, then orders them by name, property, rel, or src attributes.
 
 Register the serializer globally in your test setup:
 
@@ -1919,8 +1919,8 @@ const chaoticHead = `
 
 expect(chaoticHead).toMatchInlineSnapshot(`
   <title>Deterministic Snapshot</title>
-  <meta name="description" content="Stable snapshot example" />
-  <link rel="canonical" href="https://example.com" />
+  <meta content="Stable snapshot example" name="description" />
+  <link href="https://example.com" rel="canonical" />
 `);
 ```
 

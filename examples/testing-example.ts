@@ -77,8 +77,8 @@ describe('SiteSeo component', () => {
     // putting <title> first, then sorted metas, then sorted links, independent of render order.
     tExpect(rawHeadHtml).toMatchInlineSnapshot(`
       <title>Deterministic Snapshot</title>
-      <meta name="description" content="Stable snapshot example" />
-      <link rel="canonical" href="https://example.com" />
+      <meta content="Stable snapshot example" name="description" />
+      <link href="https://example.com" rel="canonical" />
     `);
   });
 });
