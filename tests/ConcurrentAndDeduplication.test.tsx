@@ -8,6 +8,7 @@ import {
   HelmetProvider,
   getTagIdentityKey,
 } from "../src";
+import type { HelmetServerContext } from "../src/types";
 
 const resetDocument = () => {
   document.title = "";
@@ -189,8 +190,8 @@ describe("Head Deduplication, Concurrency, and State Restoration", () => {
 
   describe("Concurrent SSR Request Isolation", () => {
     it("ensures zero cross-request state pollution across concurrent Node.js SSR instances", () => {
-      const context1: { helmet?: unknown } = {};
-      const context2: { helmet?: unknown } = {};
+      const context1: HelmetServerContext = {};
+      const context2: HelmetServerContext = {};
 
       const req1Data = new HelmetData(context1);
       const req2Data = new HelmetData(context2);

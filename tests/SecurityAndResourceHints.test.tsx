@@ -1,6 +1,7 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import type { HelmetServerContext } from "../src/types";
 
 import {
   DnsPrefetch,
@@ -18,7 +19,7 @@ import {
 describe("CSP Nonces, Secure Tag Placement, and Resource Hints", () => {
   describe("CSP Nonce Propagation", () => {
     it("propagates provider nonce to inline script and style tags", () => {
-      const context: { helmet?: unknown } = {};
+      const context: HelmetServerContext = {};
       const helmetData = new HelmetData(context);
 
       helmetData.dispatcher.setHead({
@@ -34,8 +35,8 @@ describe("CSP Nonces, Secure Tag Placement, and Resource Hints", () => {
     });
 
     it("ensures request-scoped isolation of nonces in SSR", () => {
-      const context1: { helmet?: unknown } = {};
-      const context2: { helmet?: unknown } = {};
+      const context1: HelmetServerContext = {};
+      const context2: HelmetServerContext = {};
 
       const req1Data = new HelmetData(context1);
       const req2Data = new HelmetData(context2);
@@ -50,7 +51,7 @@ describe("CSP Nonces, Secure Tag Placement, and Resource Hints", () => {
 
   describe("Body Tag Placement Collections", () => {
     it("partitions scripts into head, bodyOpen, and bodyClose collections", () => {
-      const context: { helmet?: unknown } = {};
+      const context: HelmetServerContext = {};
       const helmetData = new HelmetData(context);
 
       helmetData.dispatcher.setHead({
@@ -113,7 +114,7 @@ describe("CSP Nonces, Secure Tag Placement, and Resource Hints", () => {
       const state = {
         base: [],
         bodyAttributes: {},
-        htmlAttributes: [],
+        htmlAttributes: {},
         link: [
           { href: "https://fonts.googleapis.com", rel: "preconnect" },
           { href: "https://fonts.googleapis.com", rel: "preconnect" }, // duplicate
