@@ -83,6 +83,10 @@
     "lint": "eslint . --ext .ts,.tsx",
     "package:verify": "pnpm run build && node ./scripts/verify-package.mjs",
     "release:notes": "node ./scripts/generate-release-notes.mjs",
+    "api:check": "node scripts/check-api-surface.mjs",
+    "api:update": "node scripts/check-api-surface.mjs --update",
+    "bundle:check": "node scripts/bundle-size.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

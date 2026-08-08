@@ -50,6 +50,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Check API Surface
+        run: pnpm run api:check
+
+      - name: Check Bundle Budget
+        run: pnpm run bundle:check
+
+      - name: Run Benchmarks
+        run: pnpm run benchmark
+
       - name: Run tests
         run: pnpm test
 
