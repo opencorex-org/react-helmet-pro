@@ -48,7 +48,6 @@
     "VideoObjectJsonLd",
     "VideoSeo",
     "WebSiteJsonLd",
-    "__esModule",
     "appendSiteName",
     "auditHelmetState",
     "buildAggregateOfferSchema",
@@ -126,7 +125,6 @@
     "isSafeSeoUrl",
     "mergeHelmet",
     "mergeSeoDefaults",
-    "module.exports",
     "nextMetadataToHelmet",
     "normalizeLocaleCode",
     "normalizeSeoUrl",
@@ -148,59 +146,42 @@
     "useSeoDefaults"
   ],
   "./react-router": [
-    "__esModule",
     "createReactRouterMeta",
     "defineRouteSeo",
-    "module.exports",
     "toReactRouterMeta"
   ],
   "./remix": [
-    "__esModule",
-    "module.exports",
     "toRemixHeaders",
     "toRemixLinks",
     "toRemixMeta"
   ],
   "./astro": [
-    "__esModule",
     "collectAstroHead",
     "getAstroRobotsHeader",
-    "module.exports",
     "renderAstroHeadToString"
   ],
   "./vite-ssr": [
-    "__esModule",
     "createViteSsrStreamTransform",
-    "injectHelmetIntoHtml",
-    "module.exports"
+    "injectHelmetIntoHtml"
   ],
   "./express": [
-    "__esModule",
-    "expressHelmetMiddleware",
-    "module.exports"
+    "expressHelmetMiddleware"
   ],
   "./fastify": [
-    "__esModule",
-    "fastifyHelmetPlugin",
-    "module.exports"
+    "fastifyHelmetPlugin"
   ],
   "./hono": [
-    "__esModule",
-    "honoHelmetMiddleware",
-    "module.exports"
+    "honoHelmetMiddleware"
   ],
   "./server": [
-    "__esModule",
     "buildXRobotsTagHeader",
     "buildXRobotsTagHeaderString",
     "expressHelmetMiddleware",
     "extractXRobotsTagHeader",
     "fastifyHelmetPlugin",
-    "honoHelmetMiddleware",
-    "module.exports"
+    "honoHelmetMiddleware"
   ],
   "./adapters": [
-    "__esModule",
     "buildXRobotsTagHeader",
     "buildXRobotsTagHeaderString",
     "collectAstroHead",
@@ -213,7 +194,6 @@
     "getAstroRobotsHeader",
     "honoHelmetMiddleware",
     "injectHelmetIntoHtml",
-    "module.exports",
     "renderAstroHeadToString",
     "toReactRouterMeta",
     "toRemixHeaders",
@@ -221,26 +201,18 @@
     "toRemixMeta"
   ],
   "./cli": [
-    "__esModule",
     "formatAsSarif",
-    "module.exports",
     "parseHtmlToHelmetState",
     "runAudit"
   ],
   "./eslint": [
-    "__esModule",
-    "module.exports",
     "rules"
   ],
   "./inspector": [
-    "HelmetInspector",
-    "__esModule",
-    "module.exports"
+    "HelmetInspector"
   ],
   "./testing": [
-    "__esModule",
     "helmetSnapshotSerializer",
-    "module.exports",
     "parseHtmlToHelmetState",
     "registerMatchers",
     "seoMatchers",
@@ -250,9 +222,7 @@
     "toHaveValidStructuredData"
   ],
   "./testing/vitest": [
-    "__esModule",
     "helmetSnapshotSerializer",
-    "module.exports",
     "parseHtmlToHelmetState",
     "registerMatchers",
     "seoMatchers",

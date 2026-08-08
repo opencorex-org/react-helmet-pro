@@ -22,7 +22,9 @@ const extractApiSurface = async () => {
     try {
       const moduleUrl = `file://${absolutePath}`;
       const mod = await import(moduleUrl);
-      surface[subpath] = Object.keys(mod).filter((k) => k !== 'default').sort();
+      surface[subpath] = Object.keys(mod)
+        .filter((k) => k !== 'default' && k !== 'module.exports' && k !== '__esModule')
+        .sort();
     } catch (err) {
       console.warn(`Warning: Could not import export subpath "${subpath}": ${err.message}`);
     }
