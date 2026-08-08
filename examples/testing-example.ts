@@ -7,7 +7,7 @@
 // ─── 1. Vitest/Jest Setup File (e.g., vitest.setup.ts or setupTests.js) ─────
 
 import { expect } from 'vitest'; // or jest
-import { seoMatchers, helmetSnapshotSerializer } from 'react-helmet-pro/testing';
+import { seoMatchers, helmetSnapshotSerializer } from 'react-helmet-pro/testing/vitest';
 
 // Register the custom SEO matchers
 expect.extend(seoMatchers);

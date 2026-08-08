@@ -4,8 +4,6 @@ import {
   toHaveHreflang,
   toHaveValidStructuredData,
 } from "./matchers";
-import type {} from "vitest";
-
 
 export * from "./matchers";
 export { helmetSnapshotSerializer } from "./serializer";
@@ -44,31 +42,28 @@ export function registerMatchers() {
 }
 export default registerMatchers;
 
-// Jest Matcher Types
+// Jest Matcher Types Augmentation
 declare global {
   namespace jest {
-    interface Matchers<R> {
+    interface Matchers<R, T = {}> {
       toHaveCanonical(expectedHref: string): R;
       toBeIndexable(): R;
       toHaveHreflang(language: string, expectedHref?: string): R;
       toHaveValidStructuredData(expectedType?: string, expectedSchema?: any): R;
     }
+    interface Expect {
+      toHaveCanonical(expectedHref: string): any;
+      toBeIndexable(): any;
+      toHaveHreflang(language: string, expectedHref?: string): any;
+      toHaveValidStructuredData(expectedType?: string, expectedSchema?: any): any;
+    }
+    interface InverseAsymmetricMatchers {
+      toHaveCanonical(expectedHref: string): any;
+      toBeIndexable(): any;
+      toHaveHreflang(language: string, expectedHref?: string): any;
+      toHaveValidStructuredData(expectedType?: string, expectedSchema?: any): any;
+    }
   }
 }
 
-// Vitest Matcher Types
-declare module "vitest" {
-  interface Assertion<T = any> {
-    toHaveCanonical(expectedHref: string): void;
-    toBeIndexable(): void;
-    toHaveHreflang(language: string, expectedHref?: string): void;
-    toHaveValidStructuredData(expectedType?: string, expectedSchema?: any): void;
-  }
-  interface AsymmetricMatchersContaining {
-    toHaveCanonical(expectedHref: string): void;
-    toBeIndexable(): void;
-    toHaveHreflang(language: string, expectedHref?: string): void;
-    toHaveValidStructuredData(expectedType?: string, expectedSchema?: any): void;
-  }
-}
 
