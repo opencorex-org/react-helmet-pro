@@ -76,7 +76,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "node_modules/.pnpm/node_modules/.bin/vite --config examples/vite.config.examples.ts",
-    "typecheck": "pnpm exec tsc --noEmit && pnpm exec tsc --noEmit -p examples/tsconfig.json",
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.test.json && pnpm exec tsc --noEmit -p examples/tsconfig.json",
     "test": "pnpm exec vitest run --pool=forks --poolOptions.forks.singleFork=true",
     "test:watch": "vitest --pool=forks --poolOptions.forks.singleFork=true --max-old-space-size=4096",
     "lint": "eslint . --ext .ts,.tsx",

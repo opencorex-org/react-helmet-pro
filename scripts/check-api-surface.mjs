@@ -1,12 +1,37 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 const PKG_FILE = path.resolve('package.json');
 const SURFACE_FILE = path.resolve('api-surface.json');
 
 const pkg = JSON.parse(fs.readFileSync(PKG_FILE, 'utf8'));
 
+/**
+ * Returns true if every export entry in package.json has a corresponding dist file.
+ */
+const isDistReady = () => {
+  for (const [, mapping] of Object.entries(pkg.exports)) {
+    const relativePath = typeof mapping === 'string' ? mapping : mapping?.default;
+    if (!relativePath) continue;
+    if (!fs.existsSync(path.resolve(relativePath))) return false;
+  }
+  return true;
+};
+
 const extractApiSurface = async () => {
+  // Auto-build if dist is missing so the script is self-contained.
+  if (!isDistReady()) {
+    console.log('dist/ not ready — running build...');
+    try {
+      execSync('pnpm run build', { stdio: 'inherit' });
+    } catch {
+      throw new Error(
+        'Build failed. Fix TypeScript errors before running api:check.',
+      );
+    }
+  }
+
   const surface = {};
 
   for (const [subpath, mapping] of Object.entries(pkg.exports)) {
@@ -16,7 +41,7 @@ const extractApiSurface = async () => {
 
     const absolutePath = path.resolve(relativePath);
     if (!fs.existsSync(absolutePath)) {
-      throw new Error(`Build file not found: ${absolutePath}`);
+      throw new Error(`Build file not found after build: ${absolutePath}`);
     }
 
     try {
