@@ -13,8 +13,8 @@ import {
   INLINE_CONTENT_KEYS,
   resolveInlineContent,
   serializeInlineContent,
-  type InlineTagName,
 } from "./inlineContent";
+import {
   HELMET_IDENTITY_ATTRIBUTE,
   HELMET_MANAGED_ATTRIBUTE,
   toHelmetDomIdentity,
@@ -23,13 +23,6 @@ import { getTagIdentityKey } from "./helmetState";
 
 type TagName = keyof HelmetTagCollection;
 type ManagedTag = BaseTag | LinkTag | MetaTag | NoscriptTag | ScriptTag | StyleTag;
-
-const MANAGED_ATTRIBUTE = "data-react-helmet-pro";
-const CONTENT_KEY: Partial<Record<TagName, "innerHTML" | "cssText">> = {
-  noscript: "innerHTML",
-  script: "innerHTML",
-  style: "cssText",
-};
 
 const ATTRIBUTE_NAME_MAP: Record<string, string> = {
   charSet: "charset",
@@ -144,20 +137,6 @@ const syncManagedElement = (
   tagName: TagName,
   tag: ManagedTag,
 ) => {
-  const element = document.createElement(tagName === "base" ? "base" : tagName);
-  element.setAttribute(MANAGED_ATTRIBUTE, "true");
-
-  if (tagName === "script" || tagName === "style" || tagName === "noscript") {
-    const content = resolveInlineContent(tagName as InlineTagName, tag);
-    if (content) {
-      const serialized = serializeInlineContent(content.kind, content.value);
-      if (tagName === "noscript") {
-        element.innerHTML = serialized;
-      } else {
-        element.textContent = serialized;
-      }
-    }
-  }
   const desiredAttributes = new Map<string, string>();
   desiredAttributes.set(HELMET_MANAGED_ATTRIBUTE, "true");
   desiredAttributes.set(
@@ -170,10 +149,8 @@ const syncManagedElement = (
       value === undefined ||
       value === null ||
       value === false ||
-      INLINE_CONTENT_KEYS.has(key)
+      INLINE_CONTENT_KEYS.has(key) ||
       key === "key" ||
-      key === "innerHTML" ||
-      key === "cssText" ||
       key === "tagPosition" ||
       key === "tag-position"
     ) {
@@ -195,12 +172,17 @@ const syncManagedElement = (
     }
   });
 
-  const contentKey = CONTENT_KEY[tagName];
-  const nextContent = contentKey && typeof tag[contentKey] === "string"
-    ? String(tag[contentKey])
-    : "";
-  if (element.textContent !== nextContent) {
-    element.textContent = nextContent;
+  if (tagName === "script" || tagName === "style" || tagName === "noscript") {
+    const content = resolveInlineContent(tagName, tag);
+    const nextContent = content ? serializeInlineContent(content.kind, content.value) : "";
+
+    if (tagName === "noscript") {
+      if (element.innerHTML !== nextContent) {
+        element.innerHTML = nextContent;
+      }
+    } else if (element.textContent !== nextContent) {
+      element.textContent = nextContent;
+    }
   }
 };
 

@@ -583,8 +583,8 @@ const createTagComponent = (
   const identity = getTagIdentityKey(tagName, attributes);
   const props: Record<string, unknown> = {
     ...attributes,
-    [HELMET_IDENTITY_ATTRIBUTE]: toHelmetDomIdentity(identity),
     [HELMET_MANAGED_ATTRIBUTE]: "true",
+    [HELMET_IDENTITY_ATTRIBUTE]: toHelmetDomIdentity(identity),
     key: attributes.key ?? `${identity}-${index}`,
   };
   delete props.tagPosition;
@@ -611,7 +611,6 @@ const serializeTag = (
 ): string => {
   const filteredAttributes = omitKeys(attributes, [
     ...INLINE_CONTENT_KEYS,
-    contentKey ?? "__none__",
     "key",
     "tagPosition",
     "tag-position",
