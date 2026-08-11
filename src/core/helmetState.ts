@@ -18,6 +18,12 @@ import type {
   ScriptTag,
   StyleTag,
 } from "../types";
+import {
+  INLINE_CONTENT_KEYS,
+  resolveInlineContent,
+  serializeInlineContent,
+  type InlineTagName,
+} from "./inlineContent";
 
 type ReducedHelmetState = {
   callbacks: HelmetChangeHandler[];
@@ -359,15 +365,15 @@ export const getTagIdentityKey = (
     if (attributes.src) {
       return `script:src:${attributes.src}`;
     }
-    return `script:inline:${attributes.type ?? "text/javascript"}:${attributes.innerHTML ?? ""}`;
+    return `script:inline:${attributes.type ?? "text/javascript"}:${resolveInlineContent("script", attributes)?.value ?? ""}`;
   }
 
   if (normTag === "style") {
-    return `style:${attributes.media ?? "all"}:${attributes.cssText ?? ""}`;
+    return `style:${attributes.media ?? "all"}:${resolveInlineContent("style", attributes)?.value ?? ""}`;
   }
 
   if (normTag === "noscript") {
-    return `noscript:${attributes.innerHTML ?? ""}`;
+    return `noscript:${resolveInlineContent("noscript", attributes)?.value ?? ""}`;
   }
 
   if (normTag === "base") {
@@ -488,7 +494,7 @@ export const reduceHelmetInstances = (instances: Iterable<HelmetInstance>): Redu
 
   const allScripts = script.map((entry) => {
     const s = { ...entry.tag };
-    if (nonce && !s.nonce && (s.innerHTML !== undefined || s.type === "application/ld+json")) {
+    if (nonce && !s.nonce && (resolveInlineContent("script", s) || s.type === "application/ld+json")) {
       s.nonce = nonce;
     }
     return s;
@@ -562,14 +568,11 @@ export const serializeAttributes = (
     })
     .join(" ");
 
-const serializeContent = (value: string, encodeSpecialCharacters: boolean) =>
-  encodeSpecialCharacters ? escapeHtml(value) : value;
-
 const createTagComponent = (
   tagName: string,
   attributes: HelmetAttributes,
   index: number,
-  contentKey?: "innerHTML" | "cssText",
+  _contentKey?: "innerHTML" | "cssText",
 ) => {
   const props: Record<string, unknown> = {
     ...attributes,
@@ -578,16 +581,14 @@ const createTagComponent = (
   delete props.tagPosition;
   delete props["tag-position"];
 
-  if (contentKey === "innerHTML" && typeof attributes.innerHTML === "string") {
-    delete props.innerHTML;
-    props.dangerouslySetInnerHTML = { __html: attributes.innerHTML };
-    return createElement(tagName, props);
-  }
-
-  if (contentKey === "cssText" && typeof attributes.cssText === "string") {
-    const cssText = attributes.cssText;
-    delete props.cssText;
-    return createElement(tagName, props, cssText);
+  INLINE_CONTENT_KEYS.forEach((key) => delete props[key]);
+  if (tagName === "script" || tagName === "style" || tagName === "noscript") {
+    const content = resolveInlineContent(tagName, attributes);
+    if (content) {
+      props.dangerouslySetInnerHTML = {
+        __html: serializeInlineContent(content.kind, content.value),
+      };
+    }
   }
 
   return createElement(tagName, props);
@@ -597,11 +598,10 @@ const serializeTag = (
   tagName: string,
   attributes: HelmetAttributes,
   encodeSpecialCharacters: boolean,
-  contentKey?: "innerHTML" | "cssText",
+  _contentKey?: "innerHTML" | "cssText",
 ): string => {
-  const content = contentKey ? attributes[contentKey] : undefined;
   const filteredAttributes = omitKeys(attributes, [
-    contentKey ?? "__none__",
+    ...INLINE_CONTENT_KEYS,
     "tagPosition",
     "tag-position",
   ]) as HelmetAttributes;
@@ -612,8 +612,11 @@ const serializeTag = (
     return `<${tagName}${attributePrefix} />`;
   }
 
-  const normalizedContent =
-    typeof content === "string" ? serializeContent(content, encodeSpecialCharacters) : "";
+  const content =
+    tagName === "script" || tagName === "style" || tagName === "noscript"
+      ? resolveInlineContent(tagName as InlineTagName, attributes)
+      : undefined;
+  const normalizedContent = content ? serializeInlineContent(content.kind, content.value) : "";
 
   return `<${tagName}${attributePrefix}>${normalizedContent}</${tagName}>`;
 };
@@ -653,7 +656,7 @@ const createTitleAccessor = (
 
     const serializedAttributes = serializeAttributes(attributes, encodeSpecialCharacters);
     const attributePrefix = serializedAttributes ? ` ${serializedAttributes}` : "";
-    return `<title${attributePrefix}>${serializeContent(title, encodeSpecialCharacters)}</title>`;
+    return `<title${attributePrefix}>${escapeHtml(title)}</title>`;
   },
 });
 
@@ -710,7 +713,7 @@ const createPriorityAccessor = (
         return createTagComponent("link", tag, index);
       }
 
-      if ("src" in tag || "innerHTML" in tag) {
+      if ("src" in tag || resolveInlineContent("script", tag)) {
         return createTagComponent("script", tag, index, "innerHTML");
       }
 
@@ -724,7 +727,7 @@ const createPriorityAccessor = (
           return serializeTag("link", tag, encodeSpecialCharacters);
         }
 
-        if ("src" in tag || "innerHTML" in tag) {
+        if ("src" in tag || resolveInlineContent("script", tag)) {
           return serializeTag("script", tag, encodeSpecialCharacters, "innerHTML");
         }
 
@@ -735,19 +738,22 @@ const createPriorityAccessor = (
 
 export const buildServerState = (state: HelmetState): HelmetServerState => {
   const { link, meta, priority, script } = splitPriorityTags(state);
+  // The legacy opt-out remains in state for compatibility, but no longer disables
+  // contextual escaping in server output.
+  const encodeSpecialCharacters = true;
 
   return {
-    base: createListAccessor("base", state.base, state.encodeSpecialCharacters),
-    bodyAttributes: createAttributeAccessor(state.bodyAttributes, state.encodeSpecialCharacters),
-    bodyCloseScripts: createListAccessor("script", state.bodyCloseScripts ?? [], state.encodeSpecialCharacters, "innerHTML"),
-    bodyOpenScripts: createListAccessor("script", state.bodyOpenScripts ?? [], state.encodeSpecialCharacters, "innerHTML"),
-    htmlAttributes: createAttributeAccessor(state.htmlAttributes, state.encodeSpecialCharacters),
-    link: createListAccessor("link", link, state.encodeSpecialCharacters),
-    meta: createListAccessor("meta", meta, state.encodeSpecialCharacters),
-    noscript: createListAccessor("noscript", state.noscript, state.encodeSpecialCharacters, "innerHTML"),
-    priority: createPriorityAccessor(priority, state.encodeSpecialCharacters),
-    script: createListAccessor("script", script, state.encodeSpecialCharacters, "innerHTML"),
-    style: createListAccessor("style", state.style, state.encodeSpecialCharacters, "cssText"),
-    title: createTitleAccessor(state.title, state.titleAttributes, state.encodeSpecialCharacters),
+    base: createListAccessor("base", state.base, encodeSpecialCharacters),
+    bodyAttributes: createAttributeAccessor(state.bodyAttributes, encodeSpecialCharacters),
+    bodyCloseScripts: createListAccessor("script", state.bodyCloseScripts ?? [], encodeSpecialCharacters, "innerHTML"),
+    bodyOpenScripts: createListAccessor("script", state.bodyOpenScripts ?? [], encodeSpecialCharacters, "innerHTML"),
+    htmlAttributes: createAttributeAccessor(state.htmlAttributes, encodeSpecialCharacters),
+    link: createListAccessor("link", link, encodeSpecialCharacters),
+    meta: createListAccessor("meta", meta, encodeSpecialCharacters),
+    noscript: createListAccessor("noscript", state.noscript, encodeSpecialCharacters, "innerHTML"),
+    priority: createPriorityAccessor(priority, encodeSpecialCharacters),
+    script: createListAccessor("script", script, encodeSpecialCharacters, "innerHTML"),
+    style: createListAccessor("style", state.style, encodeSpecialCharacters, "cssText"),
+    title: createTitleAccessor(state.title, state.titleAttributes, encodeSpecialCharacters),
   };
 };

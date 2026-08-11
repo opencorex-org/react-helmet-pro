@@ -9,16 +9,16 @@ import type {
   ScriptTag,
   StyleTag,
 } from "../types";
+import {
+  INLINE_CONTENT_KEYS,
+  resolveInlineContent,
+  serializeInlineContent,
+  type InlineTagName,
+} from "./inlineContent";
 
 type TagName = keyof HelmetTagCollection;
 
 const MANAGED_ATTRIBUTE = "data-react-helmet-pro";
-const CONTENT_KEY: Partial<Record<TagName, "innerHTML" | "cssText">> = {
-  noscript: "innerHTML",
-  script: "innerHTML",
-  style: "cssText",
-};
-
 const ATTRIBUTE_NAME_MAP: Record<string, string> = {
   charSet: "charset",
   className: "class",
@@ -54,14 +54,29 @@ const setDomAttribute = (element: HTMLElement, key: string, value: string | numb
 
 export const updateTag = (type: string, props: Record<string, unknown>): HTMLElement => {
   const tag = document.createElement(type);
+  const inlineType = type === "script" || type === "style" || type === "noscript" ? type : undefined;
+  const content = inlineType ? resolveInlineContent(inlineType, props) : undefined;
+
+  if (content) {
+    const serialized = serializeInlineContent(content.kind, content.value);
+    if (inlineType === "noscript") {
+      tag.innerHTML = serialized;
+    } else {
+      tag.textContent = serialized;
+    }
+  }
 
   Object.entries(props).forEach(([key, value]) => {
     if (value === undefined || value === null || value === false) {
       return;
     }
 
-    if (key === "children" || key === "innerHTML" || key === "cssText") {
+    if (key === "children") {
       tag.textContent = String(value);
+      return;
+    }
+
+    if (INLINE_CONTENT_KEYS.has(key)) {
       return;
     }
 
@@ -116,9 +131,16 @@ const createManagedElement = (
   const element = document.createElement(tagName === "base" ? "base" : tagName);
   element.setAttribute(MANAGED_ATTRIBUTE, "true");
 
-  const contentKey = CONTENT_KEY[tagName];
-  if (contentKey && typeof tag[contentKey] === "string") {
-    element.textContent = String(tag[contentKey]);
+  if (tagName === "script" || tagName === "style" || tagName === "noscript") {
+    const content = resolveInlineContent(tagName as InlineTagName, tag);
+    if (content) {
+      const serialized = serializeInlineContent(content.kind, content.value);
+      if (tagName === "noscript") {
+        element.innerHTML = serialized;
+      } else {
+        element.textContent = serialized;
+      }
+    }
   }
 
   Object.entries(tag).forEach(([key, value]) => {
@@ -126,8 +148,7 @@ const createManagedElement = (
       value === undefined ||
       value === null ||
       value === false ||
-      key === "innerHTML" ||
-      key === "cssText"
+      INLINE_CONTENT_KEYS.has(key)
     ) {
       return;
     }

@@ -2284,6 +2284,7 @@ pnpm test
 ## Project Health
 
 - Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Inline content safety contract: [docs/INLINE_CONTENT_SAFETY.md](./docs/INLINE_CONTENT_SAFETY.md)
 - Security policy: [SECURITY.md](./SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 

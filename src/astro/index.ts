@@ -2,6 +2,11 @@ import type { HelmetData } from "../core/HelmetData";
 import type { AstroHeadCollection } from "../types/adapters";
 import type { HelmetState, HelmetTagCollection } from "../types/tags";
 import { extractXRobotsTagHeader } from "../utils/robotsBuilder";
+import {
+  INLINE_CONTENT_KEYS,
+  resolveInlineContent,
+  serializeInlineContent,
+} from "../core/inlineContent";
 
 export type { AstroHeadCollection };
 
@@ -10,6 +15,14 @@ const formatAttributes = (attrs: Record<string, any>): string => {
     .filter(([_, val]) => val !== undefined && val !== null && val !== false)
     .map(([key, val]) => (val === true ? key : `${key}="${String(val).replace(/"/g, "&quot;")}"`))
     .join(" ");
+};
+
+const withoutInlineContent = (tag: Record<string, any>) =>
+  Object.fromEntries(Object.entries(tag).filter(([key]) => !INLINE_CONTENT_KEYS.has(key)));
+
+const renderInlineContent = (tagName: "script" | "style" | "noscript", tag: Record<string, any>) => {
+  const content = resolveInlineContent(tagName, tag);
+  return content ? serializeInlineContent(content.kind, content.value) : "";
 };
 
 export const collectAstroHead = (
@@ -90,21 +103,21 @@ export const renderAstroHeadToString = (
   }
 
   for (const st of head.style) {
-    const { cssText, ...attrs } = st;
+    const attrs = withoutInlineContent(st);
     const attrsStr = formatAttributes(attrs);
-    htmlParts.push(`<style${attrsStr ? " " + attrsStr : ""}>${cssText ?? ""}</style>`);
+    htmlParts.push(`<style${attrsStr ? " " + attrsStr : ""}>${renderInlineContent("style", st)}</style>`);
   }
 
   for (const s of head.script) {
-    const { innerHTML, ...attrs } = s;
+    const attrs = withoutInlineContent(s);
     const attrsStr = formatAttributes(attrs);
-    htmlParts.push(`<script${attrsStr ? " " + attrsStr : ""}>${innerHTML ?? ""}</script>`);
+    htmlParts.push(`<script${attrsStr ? " " + attrsStr : ""}>${renderInlineContent("script", s)}</script>`);
   }
 
   for (const ns of head.noscript) {
-    const { innerHTML, ...attrs } = ns;
+    const attrs = withoutInlineContent(ns);
     const attrsStr = formatAttributes(attrs);
-    htmlParts.push(`<noscript${attrsStr ? " " + attrsStr : ""}>${innerHTML ?? ""}</noscript>`);
+    htmlParts.push(`<noscript${attrsStr ? " " + attrsStr : ""}>${renderInlineContent("noscript", ns)}</noscript>`);
   }
 
   return htmlParts.join("\n");
