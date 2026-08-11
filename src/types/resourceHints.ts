@@ -8,14 +8,15 @@ export type ResourceHintRel =
 
 export interface ResourceHintOptions {
   as?: string;
-  crossOrigin?: "" | "anonymous" | "use-credentials";
+  crossOrigin?: CrossOriginPolicy;
   fetchPriority?: "high" | "low" | "auto";
   href: string;
   imageSizes?: string;
   imageSrcSet?: string;
-  integrity?: string;
+  integrity?: SubresourceIntegrity;
   media?: string;
   nonce?: string;
+  referrerPolicy?: ReferrerPolicy;
   rel: ResourceHintRel;
   type?: string;
 }
@@ -35,3 +36,8 @@ export interface DnsPrefetchProps {
 }
 
 export interface PrefetchProps extends Omit<ResourceHintOptions, "rel"> {}
+import type {
+  CrossOriginPolicy,
+  ReferrerPolicy,
+  SubresourceIntegrity,
+} from "./subresourceIntegrity";

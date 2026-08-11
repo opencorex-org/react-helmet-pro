@@ -17,6 +17,7 @@ export interface RemixLinkDescriptor {
   imageSrcSet?: string;
   integrity?: string;
   media?: string;
+  referrerPolicy?: string;
   sizes?: string;
   type?: string;
   [key: string]: unknown;

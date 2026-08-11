@@ -6,6 +6,7 @@ export * from "./robots";
 export * from "./robotsTxt";
 export * from "./schemas";
 export * from "./sitemap";
+export * from "./subresourceIntegrity";
 export * from "./tags";
 export * from "./urlPolicy";
 export * from "./verticalSeo";

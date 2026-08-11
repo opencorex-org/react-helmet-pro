@@ -1704,6 +1704,35 @@ import { JsonLdScript, buildArticleSchema } from 'react-helmet-pro';
 
 ---
 
+### Subresource Integrity helpers
+
+`<ExternalScript />` and `<ExternalStylesheet />` require typed `sha256`,
+`sha384`, or `sha512` integrity metadata. Both default to
+`crossOrigin="anonymous"` and `referrerPolicy="no-referrer"`; override those
+attributes only when the CDN requires a different request policy.
+
+```tsx
+import { ExternalScript, ExternalStylesheet } from 'react-helmet-pro';
+
+<ExternalStylesheet
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+/>
+
+<ExternalScript
+  defer
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+/>
+```
+
+Multiple hashes are supported by separating integrity expressions with
+whitespace. Use `validateIntegrity()` or `isValidIntegrity()` when metadata is
+loaded dynamically. Development diagnostics report malformed hashes and
+cross-origin SRI descriptors that omit `crossOrigin`.
+
+---
+
 ### `<Analytics />`
 
 | Prop | Type | Description |

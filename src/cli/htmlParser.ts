@@ -70,6 +70,15 @@ export const parseHtmlToHelmetState = (htmlString: string): HelmetState => {
     if (attrs.sizes) tag.sizes = attrs.sizes;
     if (attrs.type) tag.type = attrs.type;
     if (attrs.media) tag.media = attrs.media;
+    if (attrs.integrity) {
+      tag.integrity = attrs.integrity as HelmetState["link"][number]["integrity"];
+    }
+    if (attrs.crossorigin) {
+      tag.crossOrigin = attrs.crossorigin as HelmetState["link"][number]["crossOrigin"];
+    }
+    if (attrs.referrerpolicy) {
+      tag.referrerPolicy = attrs.referrerpolicy as HelmetState["link"][number]["referrerPolicy"];
+    }
     link.push(tag);
   }
 
@@ -82,6 +91,15 @@ export const parseHtmlToHelmetState = (htmlString: string): HelmetState => {
     const tag: HelmetState["script"][number] = { innerHTML };
     if (attrs.type) tag.type = attrs.type;
     if (attrs.src) tag.src = attrs.src;
+    if (attrs.integrity) {
+      tag.integrity = attrs.integrity as HelmetState["script"][number]["integrity"];
+    }
+    if (attrs.crossorigin) {
+      tag.crossOrigin = attrs.crossorigin as HelmetState["script"][number]["crossOrigin"];
+    }
+    if (attrs.referrerpolicy) {
+      tag.referrerPolicy = attrs.referrerpolicy as HelmetState["script"][number]["referrerPolicy"];
+    }
     script.push(tag);
   }
 
