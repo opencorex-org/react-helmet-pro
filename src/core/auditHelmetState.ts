@@ -17,6 +17,7 @@ import {
   type MetaTag,
 } from "../types";
 import { JsonLdGraph } from "../utils/jsonLdGraph";
+import { validateIntegrity } from "../utils/subresourceIntegrity";
 
 type UrlKind = "document" | "image" | "refresh" | "resource";
 
@@ -1591,7 +1592,53 @@ const auditResourceHintsAndSecurity = (
 ) => {
   const seenHints = new Set<string>();
 
+  const auditIntegrity = (
+    tagName: "link" | "script",
+    tag: LinkTag | HelmetState["script"][number],
+    index: number,
+    urlAttribute: "href" | "src",
+  ) => {
+    if (typeof tag.integrity !== "string") {
+      return;
+    }
+
+    const validation = validateIntegrity(tag.integrity);
+    if (!validation.valid) {
+      addDiagnostic(
+        diagnostics,
+        {
+          id: HELMET_SECURITY_RULE_IDS.INVALID_SRI,
+          message: `Invalid Subresource Integrity metadata: ${validation.error}`,
+          source: createSource(tagName, tag, "integrity", index),
+          value: tag.integrity,
+        },
+        "warning",
+        options,
+      );
+    }
+
+    const resourceUrl = tag[urlAttribute];
+    if (
+      typeof resourceUrl === "string" &&
+      /^(?:https?:)?\/\//i.test(resourceUrl) &&
+      tag.crossOrigin === undefined
+    ) {
+      addDiagnostic(
+        diagnostics,
+        {
+          id: HELMET_SECURITY_RULE_IDS.SRI_CORS_REQUIRED,
+          message: `Subresource Integrity for a cross-origin ${tagName} requires the crossorigin attribute. Use "anonymous" unless the resource requires credentials.`,
+          source: createSource(tagName, tag, "crossOrigin", index),
+          value: resourceUrl,
+        },
+        "warning",
+        options,
+      );
+    }
+  };
+
   state.link.forEach((tag, index) => {
+    auditIntegrity("link", tag, index, "href");
     if (tag.rel === "preconnect" || tag.rel === "dns-prefetch") {
       const key = `${tag.rel}:${tag.href}`;
       if (seenHints.has(key)) {
@@ -1633,6 +1680,7 @@ const auditResourceHintsAndSecurity = (
   });
 
   state.script.forEach((tag, index) => {
+    auditIntegrity("script", tag, index, "src");
     if (
       typeof tag.src === "string" &&
       tag.src.startsWith("http") &&

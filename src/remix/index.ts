@@ -90,6 +90,7 @@ export const toRemixLinks = (
         imageSrcSet: tag.imageSrcSet,
         integrity: tag.integrity,
         media: tag.media,
+        referrerPolicy: tag.referrerPolicy,
         sizes: tag.sizes,
         type: tag.type,
         ...tag,

@@ -55,6 +55,7 @@ const ATTRIBUTE_NAME_MAP: Record<string, string> = {
   hrefLang: "hreflang",
   httpEquiv: "http-equiv",
   itemProp: "itemprop",
+  referrerPolicy: "referrerpolicy",
 };
 
 export const createEmptyTagCollection = (): HelmetTagCollection => ({

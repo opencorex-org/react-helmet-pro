@@ -1,6 +1,11 @@
 import type { ReactElement, ReactNode } from "react";
 import type { HelmetSeoDefaults } from "./defaults";
 import type { AuditHelmetStateOptions } from "./diagnostics";
+import type {
+  CrossOriginPolicy,
+  ReferrerPolicy,
+  SubresourceIntegrity,
+} from "./subresourceIntegrity";
 
 export type HelmetAttributeValue = string | number | boolean | null | undefined;
 export type HelmetAttributes = Record<string, HelmetAttributeValue>;
@@ -17,29 +22,31 @@ export interface MetaTag extends HelmetAttributes {
 
 export interface LinkTag extends HelmetAttributes {
   as?: string;
-  crossOrigin?: string;
+  crossOrigin?: CrossOriginPolicy;
   fetchPriority?: string;
   href?: string;
   imageSizes?: string;
   imageSrcSet?: string;
-  integrity?: string;
+  integrity?: SubresourceIntegrity;
   key?: string;
   media?: string;
   nonce?: string;
   rel?: string;
+  referrerPolicy?: ReferrerPolicy;
   sizes?: string;
   type?: string;
 }
 
 export interface ScriptTag extends HelmetAttributes {
   async?: boolean;
-  crossOrigin?: string;
+  crossOrigin?: CrossOriginPolicy;
   defer?: boolean;
   fetchPriority?: string;
   innerHTML?: string;
-  integrity?: string;
+  integrity?: SubresourceIntegrity;
   key?: string;
   nonce?: string;
+  referrerPolicy?: ReferrerPolicy;
   src?: string;
   tagPosition?: "head" | "bodyOpen" | "bodyClose";
   type?: string;

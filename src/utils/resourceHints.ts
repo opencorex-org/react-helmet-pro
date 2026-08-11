@@ -34,6 +34,9 @@ export const buildResourceHintLink = (options: ResourceHintOptions): LinkTag => 
   if (options.nonce) {
     link.nonce = options.nonce;
   }
+  if (options.referrerPolicy) {
+    link.referrerPolicy = options.referrerPolicy;
+  }
 
   return link;
 };
