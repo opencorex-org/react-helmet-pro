@@ -1,3 +1,5 @@
+import "@testing-library/jest-dom";
+
 import React, { StrictMode, useState } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
