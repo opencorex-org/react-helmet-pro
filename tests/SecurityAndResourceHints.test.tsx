@@ -1,7 +1,7 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { HelmetServerContext } from "../src/types";
+import type { HelmetServerContext, HelmetState } from "../src/types";
 
 import {
   DnsPrefetch,
@@ -111,7 +111,7 @@ describe("CSP Nonces, Secure Tag Placement, and Resource Hints", () => {
 
   describe("Security Diagnostics (SRI & Resource Hints)", () => {
     it("diagnoses duplicate preconnect hints and missing SRI attributes", () => {
-      const state = {
+      const state: HelmetState = {
         base: [],
         bodyAttributes: {},
         htmlAttributes: {},
