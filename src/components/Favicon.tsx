@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-
 import { isSafeSeoUrl } from "../core/auditHelmetState";
+import { Helmet } from "./Helmet";
 
 interface FaviconProps {
   href: string;
@@ -11,26 +10,9 @@ interface FaviconProps {
 }
 
 export const Favicon = ({ href, type, sizes }: FaviconProps) => {
-  useEffect(() => {
-    if (!isSafeSeoUrl(href)) {
-      return;
-    }
+  if (!isSafeSeoUrl(href)) {
+    return null;
+  }
 
-    const existingIcons = document.querySelectorAll("link[rel='icon']");
-    existingIcons.forEach((icon) => document.head.removeChild(icon));
-
-    const link = document.createElement("link");
-    link.rel = "icon";
-    link.href = href;
-    if (type) link.type = type;
-    if (sizes) link.sizes = sizes;
-    document.head.appendChild(link);
-
-    return () => {
-      document.head.removeChild(link);
-    };
-
-  }, [href, type, sizes]);
-
-  return null;
+  return <Helmet link={[{ href, rel: "icon", sizes, type }]} />;
 };
