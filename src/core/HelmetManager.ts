@@ -15,10 +15,22 @@ import {
   serializeInlineContent,
   type InlineTagName,
 } from "./inlineContent";
+  HELMET_IDENTITY_ATTRIBUTE,
+  HELMET_MANAGED_ATTRIBUTE,
+  toHelmetDomIdentity,
+} from "./helmetDom";
+import { getTagIdentityKey } from "./helmetState";
 
 type TagName = keyof HelmetTagCollection;
+type ManagedTag = BaseTag | LinkTag | MetaTag | NoscriptTag | ScriptTag | StyleTag;
 
 const MANAGED_ATTRIBUTE = "data-react-helmet-pro";
+const CONTENT_KEY: Partial<Record<TagName, "innerHTML" | "cssText">> = {
+  noscript: "innerHTML",
+  script: "innerHTML",
+  style: "cssText",
+};
+
 const ATTRIBUTE_NAME_MAP: Record<string, string> = {
   charSet: "charset",
   className: "class",
@@ -43,13 +55,13 @@ const cloneCollection = (collection: HelmetTagCollection): HelmetTagCollection =
 
 const setDomAttribute = (element: HTMLElement, key: string, value: string | number | boolean) => {
   const attributeName = getAttributeName(key);
+  const attributeValue = value === true ? "" : String(value);
 
-  if (value === true) {
-    element.setAttribute(attributeName, "");
+  if (element.getAttribute(attributeName) === attributeValue) {
     return;
   }
 
-  element.setAttribute(attributeName, String(value));
+  element.setAttribute(attributeName, attributeValue);
 };
 
 export const updateTag = (type: string, props: Record<string, unknown>): HTMLElement => {
@@ -124,9 +136,13 @@ const syncAttributes = (
   });
 };
 
-const createManagedElement = (
+const createManagedElement = (tagName: TagName) =>
+  document.createElement(tagName === "base" ? "base" : tagName);
+
+const syncManagedElement = (
+  element: HTMLElement,
   tagName: TagName,
-  tag: BaseTag | LinkTag | MetaTag | NoscriptTag | ScriptTag | StyleTag,
+  tag: ManagedTag,
 ) => {
   const element = document.createElement(tagName === "base" ? "base" : tagName);
   element.setAttribute(MANAGED_ATTRIBUTE, "true");
@@ -142,6 +158,12 @@ const createManagedElement = (
       }
     }
   }
+  const desiredAttributes = new Map<string, string>();
+  desiredAttributes.set(HELMET_MANAGED_ATTRIBUTE, "true");
+  desiredAttributes.set(
+    HELMET_IDENTITY_ATTRIBUTE,
+    toHelmetDomIdentity(getTagIdentityKey(tagName, tag)),
+  );
 
   Object.entries(tag).forEach(([key, value]) => {
     if (
@@ -149,27 +171,121 @@ const createManagedElement = (
       value === null ||
       value === false ||
       INLINE_CONTENT_KEYS.has(key)
+      key === "key" ||
+      key === "innerHTML" ||
+      key === "cssText" ||
+      key === "tagPosition" ||
+      key === "tag-position"
     ) {
       return;
     }
 
-    setDomAttribute(element, key, value as string | number | boolean);
+    desiredAttributes.set(getAttributeName(key), value === true ? "" : String(value));
   });
 
-  return element;
+  Array.from(element.attributes).forEach((attribute) => {
+    if (!desiredAttributes.has(attribute.name)) {
+      element.removeAttribute(attribute.name);
+    }
+  });
+
+  desiredAttributes.forEach((value, name) => {
+    if (element.getAttribute(name) !== value) {
+      element.setAttribute(name, value);
+    }
+  });
+
+  const contentKey = CONTENT_KEY[tagName];
+  const nextContent = contentKey && typeof tag[contentKey] === "string"
+    ? String(tag[contentKey])
+    : "";
+  if (element.textContent !== nextContent) {
+    element.textContent = nextContent;
+  }
 };
 
-const replaceManagedTags = (
-  tagName: TagName,
-  tags: Array<BaseTag | LinkTag | MetaTag | NoscriptTag | ScriptTag | StyleTag>,
-) => {
-  document.head
-    .querySelectorAll(`${tagName}[${MANAGED_ATTRIBUTE}="true"]`)
-    .forEach((node) => node.parentNode?.removeChild(node));
+const getManagedElements = (tagName: TagName): HTMLElement[] =>
+  Array.from(
+    document.head.querySelectorAll<HTMLElement>(
+      `${tagName}[${HELMET_MANAGED_ATTRIBUTE}="true"]`,
+    ),
+  );
 
-  tags.forEach((tag) => {
-    document.head.appendChild(createManagedElement(tagName, tag));
+const reconcileManagedTags = (
+  tagName: TagName,
+  tags: ManagedTag[],
+) => {
+  const existing = getManagedElements(tagName);
+  const groupEnd = existing.length ? existing[existing.length - 1].nextSibling : null;
+  const elementsByIdentity = new Map<string, HTMLElement[]>();
+
+  existing.forEach((element) => {
+    const identity = element.getAttribute(HELMET_IDENTITY_ATTRIBUTE);
+    if (!identity) {
+      return;
+    }
+    const matches = elementsByIdentity.get(identity) ?? [];
+    matches.push(element);
+    elementsByIdentity.set(identity, matches);
   });
+
+  const desired = tags.map((tag) => {
+    const identity = toHelmetDomIdentity(getTagIdentityKey(tagName, tag));
+    const matches = elementsByIdentity.get(identity);
+    const element = matches?.shift() ?? createManagedElement(tagName);
+    syncManagedElement(element, tagName, tag);
+    return element;
+  });
+
+  const desiredSet = new Set(desired);
+  existing.forEach((element) => {
+    if (!desiredSet.has(element)) {
+      element.parentNode?.removeChild(element);
+    }
+  });
+
+  const current = existing.filter((element) => desiredSet.has(element));
+  desired.forEach((element, index) => {
+    const reference = current[index] ?? groupEnd;
+    if (reference !== element) {
+      document.head.insertBefore(element, reference);
+      const previousIndex = current.indexOf(element, index + 1);
+      if (previousIndex !== -1) {
+        current.splice(previousIndex, 1);
+      }
+      current.splice(index, 0, element);
+    }
+  });
+};
+
+const diffTags = (
+  tagName: TagName,
+  previous: ManagedTag[],
+  next: ManagedTag[],
+) => {
+  const previousByIdentity = new Map(
+    previous.map((tag) => [getTagIdentityKey(tagName, tag), tag]),
+  );
+  const nextByIdentity = new Map(
+    next.map((tag) => [getTagIdentityKey(tagName, tag), tag]),
+  );
+  const added: ManagedTag[] = [];
+  const removed: ManagedTag[] = [];
+
+  previousByIdentity.forEach((tag, identity) => {
+    const nextTag = nextByIdentity.get(identity);
+    if (!nextTag || stableStringify(tag) !== stableStringify(nextTag)) {
+      removed.push({ ...tag });
+    }
+  });
+  nextByIdentity.forEach((tag, identity) => {
+    const previousTag = previousByIdentity.get(identity);
+    if (!previousTag || stableStringify(previousTag) !== stableStringify(tag)) {
+      added.push({ ...tag });
+    }
+  });
+
+  return { added, removed };
 };
 
 const syncTitle = (
@@ -181,7 +297,7 @@ const syncTitle = (
   const titleElement = document.head.querySelector("title") ?? document.createElement("title");
 
   if (!titleElement.parentNode) {
-    titleElement.setAttribute(MANAGED_ATTRIBUTE, "true");
+    titleElement.setAttribute(HELMET_MANAGED_ATTRIBUTE, "true");
     document.head.appendChild(titleElement);
   }
 
@@ -201,8 +317,11 @@ const syncTitle = (
   });
 
   if (previousTitle !== nextTitle) {
-    titleElement.textContent = nextTitle ?? "";
-    document.title = nextTitle ?? "";
+    const nextText = nextTitle ?? "";
+    if (titleElement.textContent !== nextText) {
+      titleElement.textContent = nextText;
+      document.title = nextText;
+    }
   }
 };
 
@@ -242,9 +361,10 @@ export const syncHelmetState = (
       return;
     }
 
-    removedTags[tagName] = previousTags.map((tag) => ({ ...tag })) as never;
-    addedTags[tagName] = nextTags.map((tag) => ({ ...tag })) as never;
-    replaceManagedTags(tagName, nextTags);
+    const diff = diffTags(tagName, previousTags, nextTags);
+    removedTags[tagName] = diff.removed as never;
+    addedTags[tagName] = diff.added as never;
+    reconcileManagedTags(tagName, nextTags);
   });
 
   return { addedTags, removedTags };

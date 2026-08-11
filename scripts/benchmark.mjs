@@ -1,6 +1,8 @@
 import { parseHtmlToHelmetState } from '../dist/cli/index.js';
 import { mergeHelmet } from '../dist/index.js';
 import { auditHelmetState } from '../dist/index.js';
+import { syncHelmetState } from '../dist/core/HelmetManager.js';
+import { JSDOM } from 'jsdom';
 
 // Setup mock data for benchmarks
 const sampleHtml = `
@@ -76,5 +78,51 @@ runBenchmark('Helmet State merging (A + B)', () => {
 runBenchmark('Helmet State SEO Auditing', () => {
   auditHelmetState(stateA, { rules: ['RHP_SEO_TITLE_TOO_SHORT', 'RHP_SEO_CANONICAL_MISSING'] });
 });
+
+const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>');
+globalThis.document = dom.window.document;
+globalThis.window = dom.window;
+
+const createDomState = (description) => ({
+  base: [],
+  bodyAttributes: {},
+  defer: false,
+  encodeSpecialCharacters: true,
+  htmlAttributes: {},
+  link: [
+    { href: 'https://cdn.example.com/app.css', rel: 'stylesheet' },
+  ],
+  meta: [
+    { content: description, name: 'description' },
+    ...Array.from({ length: 99 }, (_, index) => ({
+      content: `value-${index}`,
+      name: `benchmark-${index}`,
+    })),
+  ],
+  noscript: [],
+  prioritizeSeoTags: false,
+  script: [{ src: 'https://cdn.example.com/app.js' }],
+  style: [],
+  title: 'DOM reconciliation benchmark',
+  titleAttributes: {},
+});
+
+const domStateA = createDomState('Description A');
+const domStateB = createDomState('Description B');
+const emptyDomState = {
+  ...createDomState(''),
+  link: [],
+  meta: [],
+  script: [],
+  title: undefined,
+};
+syncHelmetState(emptyDomState, domStateA);
+let previousDomState = domStateA;
+
+runBenchmark('Incremental DOM reconciliation', () => {
+  const nextDomState = previousDomState === domStateA ? domStateB : domStateA;
+  syncHelmetState(previousDomState, nextDomState);
+  previousDomState = nextDomState;
+}, 1000);
 
 console.log('========================================================================================');

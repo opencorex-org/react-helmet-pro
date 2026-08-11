@@ -1,5 +1,11 @@
 import React, { Children, Fragment, createElement, isValidElement } from "react";
 
+import {
+  HELMET_IDENTITY_ATTRIBUTE,
+  HELMET_MANAGED_ATTRIBUTE,
+  toHelmetDomIdentity,
+} from "./helmetDom";
+
 import type {
   BaseTag,
   HelmetAttributes,
@@ -574,9 +580,12 @@ const createTagComponent = (
   index: number,
   _contentKey?: "innerHTML" | "cssText",
 ) => {
+  const identity = getTagIdentityKey(tagName, attributes);
   const props: Record<string, unknown> = {
     ...attributes,
-    key: `${tagName}-${index}`,
+    [HELMET_IDENTITY_ATTRIBUTE]: toHelmetDomIdentity(identity),
+    [HELMET_MANAGED_ATTRIBUTE]: "true",
+    key: attributes.key ?? `${identity}-${index}`,
   };
   delete props.tagPosition;
   delete props["tag-position"];
@@ -602,10 +611,21 @@ const serializeTag = (
 ): string => {
   const filteredAttributes = omitKeys(attributes, [
     ...INLINE_CONTENT_KEYS,
+    contentKey ?? "__none__",
+    "key",
     "tagPosition",
     "tag-position",
   ]) as HelmetAttributes;
-  const serializedAttributes = serializeAttributes(filteredAttributes, encodeSpecialCharacters);
+  const serializedAttributes = serializeAttributes(
+    {
+      ...filteredAttributes,
+      [HELMET_MANAGED_ATTRIBUTE]: "true",
+      [HELMET_IDENTITY_ATTRIBUTE]: toHelmetDomIdentity(
+        getTagIdentityKey(tagName, attributes),
+      ),
+    },
+    encodeSpecialCharacters,
+  );
   const attributePrefix = serializedAttributes ? ` ${serializedAttributes}` : "";
 
   if (SELF_CLOSING_TAGS.has(tagName)) {
