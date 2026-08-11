@@ -37,6 +37,18 @@ export * from './hooks/useHelmetMiddleware';
 export * from './hooks/useSeoDefaults';
 export * from './context/HelmetProvider';
 export * from './core/HelmetData';
+export {
+  createJsonLdContent,
+  createNoscriptHtml,
+  createScriptContent,
+  createStyleContent,
+} from './core/inlineContent';
+export type {
+  JsonLdContent,
+  NoscriptHtml,
+  ScriptContent,
+  StyleContent,
+} from './core/inlineContent';
 export { getTagIdentityKey, REPEATABLE_META_PROPERTIES } from './core/helmetState';
 export * from './core/SSRUtils';
 export * from './core/auditHelmetState';

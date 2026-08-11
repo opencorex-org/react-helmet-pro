@@ -10,6 +10,11 @@ import type {
   StyleTag,
 } from "../types";
 import {
+  INLINE_CONTENT_KEYS,
+  resolveInlineContent,
+  serializeInlineContent,
+} from "./inlineContent";
+import {
   HELMET_IDENTITY_ATTRIBUTE,
   HELMET_MANAGED_ATTRIBUTE,
   toHelmetDomIdentity,
@@ -18,12 +23,6 @@ import { getTagIdentityKey } from "./helmetState";
 
 type TagName = keyof HelmetTagCollection;
 type ManagedTag = BaseTag | LinkTag | MetaTag | NoscriptTag | ScriptTag | StyleTag;
-
-const CONTENT_KEY: Partial<Record<TagName, "innerHTML" | "cssText">> = {
-  noscript: "innerHTML",
-  script: "innerHTML",
-  style: "cssText",
-};
 
 const ATTRIBUTE_NAME_MAP: Record<string, string> = {
   charSet: "charset",
@@ -60,14 +59,29 @@ const setDomAttribute = (element: HTMLElement, key: string, value: string | numb
 
 export const updateTag = (type: string, props: Record<string, unknown>): HTMLElement => {
   const tag = document.createElement(type);
+  const inlineType = type === "script" || type === "style" || type === "noscript" ? type : undefined;
+  const content = inlineType ? resolveInlineContent(inlineType, props) : undefined;
+
+  if (content) {
+    const serialized = serializeInlineContent(content.kind, content.value);
+    if (inlineType === "noscript") {
+      tag.innerHTML = serialized;
+    } else {
+      tag.textContent = serialized;
+    }
+  }
 
   Object.entries(props).forEach(([key, value]) => {
     if (value === undefined || value === null || value === false) {
       return;
     }
 
-    if (key === "children" || key === "innerHTML" || key === "cssText") {
+    if (key === "children") {
       tag.textContent = String(value);
+      return;
+    }
+
+    if (INLINE_CONTENT_KEYS.has(key)) {
       return;
     }
 
@@ -135,9 +149,8 @@ const syncManagedElement = (
       value === undefined ||
       value === null ||
       value === false ||
+      INLINE_CONTENT_KEYS.has(key) ||
       key === "key" ||
-      key === "innerHTML" ||
-      key === "cssText" ||
       key === "tagPosition" ||
       key === "tag-position"
     ) {
@@ -159,12 +172,17 @@ const syncManagedElement = (
     }
   });
 
-  const contentKey = CONTENT_KEY[tagName];
-  const nextContent = contentKey && typeof tag[contentKey] === "string"
-    ? String(tag[contentKey])
-    : "";
-  if (element.textContent !== nextContent) {
-    element.textContent = nextContent;
+  if (tagName === "script" || tagName === "style" || tagName === "noscript") {
+    const content = resolveInlineContent(tagName, tag);
+    const nextContent = content ? serializeInlineContent(content.kind, content.value) : "";
+
+    if (tagName === "noscript") {
+      if (element.innerHTML !== nextContent) {
+        element.innerHTML = nextContent;
+      }
+    } else if (element.textContent !== nextContent) {
+      element.textContent = nextContent;
+    }
   }
 };
 

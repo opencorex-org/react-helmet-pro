@@ -6,6 +6,12 @@ import type {
   ReferrerPolicy,
   SubresourceIntegrity,
 } from "./subresourceIntegrity";
+import type {
+  JsonLdContent,
+  NoscriptHtml,
+  ScriptContent,
+  StyleContent,
+} from "../core/inlineContent";
 
 export type HelmetAttributeValue = string | number | boolean | null | undefined;
 export type HelmetAttributes = Record<string, HelmetAttributeValue>;
@@ -42,25 +48,36 @@ export interface ScriptTag extends HelmetAttributes {
   crossOrigin?: CrossOriginPolicy;
   defer?: boolean;
   fetchPriority?: string;
+  /** @deprecated Use scriptContent for JavaScript or jsonLd for structured data. */
   innerHTML?: string;
+  /** Breakout-safe JSON produced by createJsonLdContent(). */
+  jsonLd?: JsonLdContent;
   integrity?: SubresourceIntegrity;
   key?: string;
   nonce?: string;
   referrerPolicy?: ReferrerPolicy;
+  /** Trusted executable source produced by createScriptContent(). */
+  scriptContent?: ScriptContent;
   src?: string;
   tagPosition?: "head" | "bodyOpen" | "bodyClose";
   type?: string;
 }
 
 export interface StyleTag extends HelmetAttributes {
+  /** @deprecated Use styleContent instead. */
   cssText?: string;
   key?: string;
   media?: string;
   nonce?: string;
+  /** CSS source produced by createStyleContent(). */
+  styleContent?: StyleContent;
   type?: string;
 }
 
 export interface NoscriptTag extends HelmetAttributes {
+  /** Trusted HTML produced by createNoscriptHtml(). */
+  htmlContent?: NoscriptHtml;
+  /** @deprecated Use htmlContent instead. */
   innerHTML?: string;
   key?: string;
   tagPosition?: "head" | "bodyOpen" | "bodyClose";
@@ -141,6 +158,7 @@ export interface HelmetProps {
   children?: ReactNode;
   defaultTitle?: string;
   defer?: boolean;
+  /** @deprecated Unsafe opt-out is ignored by server serialization and will be removed in the next major version. */
   encodeSpecialCharacters?: boolean;
   helmetData?: HelmetDataContainer;
   htmlAttributes?: HelmetAttributes;
